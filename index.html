@@ -322,6 +322,7 @@ footer{
     <button id="tab-result" onclick="showTab('result')">ご提案</button>
     <button id="tab-list" onclick="showTab('list')">資金リスト</button>
     <button id="tab-saved" onclick="showTab('saved')">保存</button>
+    <button id="tab-help" onclick="showTab('help')">使い方</button>
   </div>
 </header>
 
@@ -666,8 +667,140 @@ footer{
       <div class="h">読み込んだプランは、いまの一覧に追加されます（同じ名前は「（読込）」を付けて区別します）。</div>
     </div>
   </div>
+
+>
 </div>
 
+<!-- ==================== 使い方 ==================== -->
+<div class="pane paneSaved noprint" id="pane-help">
+
+  <div class="card">
+    <div class="ttl">このツールについて</div>
+    <p class="cap" style="margin-bottom:0">
+      商談の場で、総事業費と毎月のご返済をその場で試算するツールです。<br>
+      入力したデータは<b>この端末の中だけ</b>に保存され、サーバーには送信されません。
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="ttl">入力の考え方</div>
+    <p class="cap">
+      <b>空欄のままでも計算できます。</b>空欄の項目は初期値で自動計算し「自動」と表示します。
+      金額を入れるか、ボタンで選ぶと「手入力」に変わり、その値が優先されます。<br>
+      金額はすべて<b>万円・税抜</b>です（土地代・保険・登記などは非課税）。
+    </p>
+    <details>
+      <summary>入力する項目の一覧</summary>
+      <table>
+        <tr><th>項目</th><th>初期値</th></tr>
+        <tr><td>1 主体工事費</td><td class="n">延床 × 坪単価</td></tr>
+        <tr><td>2 付帯工事費</td><td class="n">300万円</td></tr>
+        <tr><td>3 エアロテック</td><td class="n">250万円</td></tr>
+        <tr><td>4 太陽光発電</td><td class="n">30万円</td></tr>
+        <tr><td>5 RC・地下工事</td><td class="n">0</td></tr>
+        <tr><td>6 諸費用（設計・構造計算・申請）</td><td class="n">自動計算</td></tr>
+        <tr><td>7 外構工事</td><td class="n">0</td></tr>
+        <tr><td>8 解体工事</td><td class="n">0</td></tr>
+        <tr><td>9 引込み工事</td><td class="n">0</td></tr>
+        <tr><td>10 地盤改良工事</td><td class="n">0</td></tr>
+        <tr><td>11 照明・カーテン</td><td class="n">200万円</td></tr>
+        <tr><td>12 その他の費用</td><td class="n">自動計算</td></tr>
+        <tr><td>13 ローン事務手数料</td><td class="n">計上しない</td></tr>
+        <tr><td>14 土地・自己資金</td><td class="n">0</td></tr>
+        <tr><td>15 住宅ローン</td><td class="n">35年固定1.82%・35年</td></tr>
+      </table>
+    </details>
+    <details>
+      <summary>建物と借入額の入れ方</summary>
+      <p class="cap" style="margin-top:10px">
+        <b>階数</b>を選ぶと坪単価の目安が入ります（平屋150／2階建て130／3階建て140 万円/坪）。<br>
+        <b>延床面積</b>は坪と㎡を切り替えられます。スライダーと＋−でも調整できます。<br>
+        <b>坪単価</b>は100万円から10万円きざみ。ボタンは横にスクロールします。<br>
+        <b>借入額</b>は空欄なら「総事業費 − 自己資金」を自動で使います。金額を入れると、その額で計算し過不足を表示します。
+      </p>
+    </details>
+  </div>
+
+  <div class="card">
+    <div class="ttl">自動計算の中身</div>
+    <table>
+      <tr><th>項目</th><th>計算</th></tr>
+      <tr><td>主体工事費</td><td>延床坪数 × 坪単価</td></tr>
+      <tr><td>予備費</td><td>本体工事費 × 5%</td></tr>
+      <tr><td>設計・監理費</td><td>（主体＋付帯＋エアロテック）× 3.0%</td></tr>
+      <tr><td>構造計算・敷地調査</td><td>延床㎡ × 2,500円</td></tr>
+      <tr><td>消費税</td><td>（工事費＋諸費用）× 10%</td></tr>
+      <tr><td>仲介手数料</td><td>土地代 × 3% ＋ 6万円 ＋ 消費税</td></tr>
+      <tr><td>ローン事務手数料</td><td>選んだ方法（初期は計上なし）</td></tr>
+      <tr><td>毎月のご返済</td><td>元利均等・ボーナス返済なし</td></tr>
+    </table>
+    <p class="cap" style="margin:12px 0 0">
+      初期値は入力タブ下の<b>「自動計算の基準」</b>で変更できます。変更するとこの端末に保存されます。
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="ttl">お客様にお見せするとき</div>
+    <p class="cap" style="margin-bottom:0">
+      右上か画面下の<b>「お客様に見せる」</b>で、入力欄を隠した全画面表示になります。<br>
+      プラン名・建物概要／総事業費と費用構成／自己資金とお借入額／毎月のご返済・総返済額・利息／概算である旨の注記、の順に表示します。✕で戻ります。
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="ttl">保存と受け渡し</div>
+    <p class="cap">
+      「このプランを保存」でお客様名ごとに保存できます。<b>保存先はこの端末の中だけ</b>です。
+      PCで入れたものはiPhoneには出てきません。
+    </p>
+    <details>
+      <summary>他の端末へ渡す・バックアップする</summary>
+      <table>
+        <tr><th>ボタン</th><th>用途</th></tr>
+        <tr><td>JSONファイルで保存</td><td>全データ、または入力中の1件を書き出す</td></tr>
+        <tr><td>JSONをコピー</td><td>メールやメモに貼って保管・送付</td></tr>
+        <tr><td>JSONファイルから</td><td>書き出したファイルを読み込む</td></tr>
+        <tr><td>貼り付けて読み込む</td><td>コピーしたJSONを貼って読み込む</td></tr>
+      </table>
+      <p class="cap" style="margin-top:10px">
+        読み込んだプランは一覧に追加されます（同名は「（読込）」を付けて区別）。
+        iPhoneでは書き出したファイルは「ファイル」アプリに保存されます。
+      </p>
+    </details>
+    <details>
+      <summary>資料に使う</summary>
+      <p class="cap" style="margin-top:10px">
+        「資金リスト」タブから、<b>文章でコピー</b>（メール本文用）、
+        <b>表でコピー</b>（ExcelやGoogleスプレッドシートに貼ると表になります）、
+        <b>印刷・PDF</b> が使えます。
+      </p>
+    </details>
+  </div>
+
+  <div class="card">
+    <div class="ttl">ご注意</div>
+    <div class="msg warn"><span>
+      概算の試算です。金利・諸費用・税額は金融機関の商品内容やご契約条件により変動します。正式な返済額は審査結果に基づきます。
+    </span></div>
+    <div class="msg warn"><span>
+      地盤改良工事の初期値は0です。地盤調査の結果で数百万円単位の増額になることがあります。
+    </span></div>
+    <div class="msg warn"><span>
+      URLを知っていれば誰でも開けます。顧客名を入れた画面のスクリーンショットの取り扱いにご注意ください。
+    </span></div>
+  </div>
+
+  <div class="card">
+    <div class="ttl">困ったとき</div>
+    <table>
+      <tr><th>症状</th><th>対処</th></tr>
+      <tr><td>入力が消えた</td><td>履歴・データを消すと消えます。JSONで書き出しておくと安全です</td></tr>
+      <tr><td>別の端末で見たい</td><td>「保存」タブでJSONを書き出し、相手の端末で読み込みます</td></tr>
+      <tr><td>初期値を変えたい</td><td>入力タブ下の「自動計算の基準」を開きます</td></tr>
+      <tr><td>やり直したい</td><td>「クリア」を押します（保存済みプランは消えません）</td></tr>
+    </table>
+  </div>
+</div>
 </div>
 
 <footer>
@@ -900,7 +1033,7 @@ function setMode(){
   document.querySelectorAll('.full').forEach(el=>{ el.style.display=''; });
 }
 function showTab(t){
-  ['input','result','list','saved'].forEach(k=>{
+  ['input','result','list','saved','help'].forEach(k=>{
     $('pane-'+k).classList.toggle('on',k===t);
     $('tab-'+k).classList.toggle('on',k===t);
   });
