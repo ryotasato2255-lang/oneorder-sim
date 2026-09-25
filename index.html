@@ -390,8 +390,15 @@ footer{
     <div class="sum"><span>本体工事費（延床 × 坪単価）</span><b class="num" id="qHonTai">0<i>万円</i></b></div>
   </div>
 
+  <div class="card" id="cardA">
+    <div class="ttl"><span class="no">2</span>外構・解体・その他工事<span class="rt">空欄＝自動</span></div>
+    <p class="cap">金額は税抜・万円。空欄のままなら目安を自動で入れます。ボタンで選ぶか、数字を入れるとその値が優先されます。</p>
+    <div id="rowsA"></div>
+    <div class="sum"><span>請負工事 計（税抜・本体を含む）</span><b class="num" id="stA">0<i>万円</i></b></div>
+  </div>
+
   <div class="card">
-    <div class="ttl"><span class="no">2</span>土地・自己資金</div>
+    <div class="ttl"><span class="no">3</span>土地・自己資金</div>
 
     <div class="f">
       <div class="lb"><span class="t">土地代</span><span class="auto" id="tochiTag">取得なしは0</span></div>
@@ -420,7 +427,7 @@ footer{
   </div>
 
   <div class="card">
-    <div class="ttl"><span class="no">3</span>住宅ローン</div>
+    <div class="ttl"><span class="no">4</span>住宅ローン</div>
 
     <div class="f">
       <div class="lb"><span class="t">金利タイプ</span></div>
@@ -481,12 +488,6 @@ footer{
     </div>
   </div>
 
-  <div class="card full">
-    <div class="ttl"><span class="no">A</span>請負工事<span class="rt">空欄＝自動</span></div>
-    <p class="cap">金額は税抜・万円。空欄のままなら延床坪数から目安を自動で入れます。数字を入れるとその値が優先されます。</p>
-    <div id="rowsA"></div>
-    <div class="sum"><span>請負工事 計（税抜）</span><b class="num" id="stA">0<i>万円</i></b></div>
-  </div>
 
   <div class="card full">
     <div class="ttl"><span class="no">B</span>設計・調査・申請<span class="rt">空欄＝自動</span></div>
@@ -756,16 +757,19 @@ function setLoanFeeMode(m){
 
 const ROWS={
   A:[
-    {id:'honTai', n:'主体工事費', h:'延床坪数 × 坪単価', auto:d=>d.tsubo*tankaVal()},
+    {id:'honTai', n:'主体工事費（上の建物で計算）', h:'ここに数字を入れると、坪単価の計算より優先されます', full:true, auto:d=>d.tsubo*tankaVal()},
     {id:'futai',  n:'付帯工事費', h:'屋外給排水・電気ガス等。100万円単位で調整できます',
       step:100, chips:[100,200,300,400,500], auto:()=>STD.futai},
     {id:'kucho',  n:'全館空調（エアロテック）', h:'50万円単位で調整できます',
       step:50, chips:[100,150,200,250,300], auto:()=>STD.kucho},
     {id:'gaiko',  n:'外構工事', h:'100万円単位で調整できます',
       step:100, chips:[100,200,300,400,500], auto:()=>STD.gaiko},
-    {id:'kaitai', n:'解体工事', h:'建替えの場合に入力', auto:()=>0},
-    {id:'jiban',  n:'地盤改良工事', h:'調査前は0。判明後に入力', auto:()=>0},
-    {id:'karizumai', n:'仮住まい・引越', h:'', auto:()=>0},
+    {id:'kaitai', n:'解体工事', h:'建替えの場合に入力。100万円きざみで選べます',
+      step:100, chips:[0,100,200,300,400,500], auto:()=>0},
+    {id:'jiban',  n:'地盤改良工事', h:'調査前は0のまま。判明後に入力',
+      step:50, chips:[0,50,100,150,200,300], auto:()=>0},
+    {id:'karizumai', n:'仮住まい・引越', h:'建替えで仮住まいが必要な場合',
+      step:50, chips:[0,50,100,150,200,300], auto:()=>0},
     {id:'yobi',   n:'追加変更工事の予備費', h:'', auto:d=>d.honTai*STD.yobiRate/100}
   ],
   B:[
@@ -822,12 +826,13 @@ const yen=n=>Math.round(n).toLocaleString('ja-JP');
 /* ---- 行UIの生成 ---- */
 function rowHTML(r){
   const st=r.step||10;
+  const cls=r.full?'f full':'f';
   const chips=r.chips
     ? '<div class="chips" id="chip_'+r.id+'">'+
       r.chips.map(v=>'<button onclick="setVal(\''+r.id+'\','+v+')">'+man(v)+'</button>').join('')+
       '</div>'
     : '';
-  return '<div class="f">'+
+  return '<div class="'+cls+'">'+
     '<div class="lb"><span class="t">'+r.n+'</span><span class="auto on" id="tag_'+r.id+'">自動</span></div>'+
     '<div class="stp">'+
       '<button class="mb" onclick="step(\''+r.id+'\',-'+st+')">−</button>'+
