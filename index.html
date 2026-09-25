@@ -391,14 +391,47 @@ footer{
   </div>
 
   <div class="card" id="cardA">
-    <div class="ttl"><span class="no">2</span>外構・解体・その他工事<span class="rt">空欄＝自動</span></div>
-    <p class="cap">金額は税抜・万円。空欄のままなら目安を自動で入れます。ボタンで選ぶか、数字を入れるとその値が優先されます。</p>
+    <div class="ttl"><span class="no">2</span>工事費<span class="rt">空欄＝自動</span></div>
+    <p class="cap">金額は税抜・万円。空欄のままなら初期値で計算します。ボタンで選ぶか、数字を入れるとその値が優先されます。</p>
     <div id="rowsA"></div>
-    <div class="sum"><span>請負工事 計（税抜・本体を含む）</span><b class="num" id="stA">0<i>万円</i></b></div>
+    <div class="sum"><span>工事費 計（税抜・本体を含む）</span><b class="num" id="stA">0<i>万円</i></b></div>
   </div>
 
   <div class="card">
-    <div class="ttl"><span class="no">3</span>土地・自己資金</div>
+    <div class="ttl"><span class="no">6</span>諸費用<span class="rt">空欄＝自動</span></div>
+    <p class="cap">設計・監理費は「主体＋付帯＋エアロテック」の合計に対する率、構造計算・敷地調査費は延床㎡単価で自動計算します。</p>
+    <div class="f">
+      <div class="lb"><span class="t">設計料率</span></div>
+      <div class="seg mini">
+        <button id="dr-25" class="on" onclick="setDesignRate(2.5)">2.5%（標準）</button>
+        <button id="dr-30" onclick="setDesignRate(3)">3.0%（BIM等）</button>
+      </div>
+      <div class="h" id="designHint"></div>
+    </div>
+    <div id="rowsB"></div>
+    <div class="sum"><span>諸費用 計（税抜）</span><b class="num" id="stB">0<i>万円</i></b></div>
+    <div class="sum"><span>消費税（<span id="taxRateLabel">10</span>%）</span><b class="num" id="stTax">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card">
+    <div class="ttl"><span class="no">12</span>その他の費用<span class="rt">空欄＝自動</span></div>
+    <p class="cap">金額はボタンで選べます。直接入れると、その値が優先されます。</p>
+    <div class="f">
+      <div class="lb"><span class="t">ローン事務手数料の計算方法</span></div>
+      <div class="seg mini">
+        <button id="lf-none" class="on" onclick="setLoanFeeMode('none')">なし</button>
+        <button id="lf-r22" onclick="setLoanFeeMode('r22')">借入×2.2%</button>
+        <button id="lf-r11" onclick="setLoanFeeMode('r11')">借入×1.1%</button>
+        <button id="lf-flat" onclick="setLoanFeeMode('flat')">定額11万</button>
+      </div>
+      <div class="h" id="loanFeeHint"></div>
+    </div>
+    <div id="rowsC"></div>
+    <div class="sum"><span>その他費用 計</span><b class="num" id="stC">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card">
+    <div class="ttl"><span class="no">14</span>土地・自己資金</div>
 
     <div class="f">
       <div class="lb"><span class="t">土地代</span><span class="auto" id="tochiTag">取得なしは0</span></div>
@@ -427,7 +460,7 @@ footer{
   </div>
 
   <div class="card">
-    <div class="ttl"><span class="no">4</span>住宅ローン</div>
+    <div class="ttl"><span class="no">15</span>住宅ローン</div>
 
     <div class="f">
       <div class="lb"><span class="t">金利タイプ</span></div>
@@ -489,41 +522,10 @@ footer{
   </div>
 
 
-  <div class="card full">
-    <div class="ttl"><span class="no">B</span>設計・調査・申請<span class="rt">空欄＝自動</span></div>
-    <p class="cap">設計料は「主体＋付帯＋空調」の合計に対する率、構造計算・調査料は延床㎡単価で自動計算します。</p>
-    <div class="f">
-      <div class="lb"><span class="t">設計料率</span></div>
-      <div class="seg mini">
-        <button id="dr-25" class="on" onclick="setDesignRate(2.5)">2.5%（標準）</button>
-        <button id="dr-30" onclick="setDesignRate(3)">3.0%（BIM等）</button>
-      </div>
-      <div class="h" id="designHint"></div>
-    </div>
-    <div id="rowsB"></div>
-    <div class="sum"><span>設計・調査・申請 計（税抜）</span><b class="num" id="stB">0<i>万円</i></b></div>
-    <div class="sum"><span>消費税（<span id="taxRateLabel">10</span>%）</span><b class="num" id="stTax">0<i>万円</i></b></div>
-  </div>
+
 
   <div class="card full">
-    <div class="ttl"><span class="no">C</span>その他の費用<span class="rt">空欄＝自動</span></div>
-    <p class="cap">金額はボタンで選べます。金額を直接入れると、その値が優先されます。</p>
-    <div class="f">
-      <div class="lb"><span class="t">ローン事務手数料の計算方法</span></div>
-      <div class="seg mini">
-        <button id="lf-r22" class="on" onclick="setLoanFeeMode('r22')">借入×2.2%</button>
-        <button id="lf-r11" onclick="setLoanFeeMode('r11')">借入×1.1%</button>
-        <button id="lf-flat" onclick="setLoanFeeMode('flat')">定額11万</button>
-        <button id="lf-none" onclick="setLoanFeeMode('none')">なし</button>
-      </div>
-      <div class="h" id="loanFeeHint"></div>
-    </div>
-    <div id="rowsC"></div>
-    <div class="sum"><span>その他費用 計</span><b class="num" id="stC">0<i>万円</i></b></div>
-  </div>
-
-  <div class="card full">
-    <div class="ttl"><span class="no">E</span>土地関連<span class="rt">空欄＝自動</span></div>
+    <div class="ttl">土地関連の内訳<span class="rt">空欄＝自動</span></div>
     <div id="rowsE"></div>
     <div class="sum"><span>土地関連 計</span><b class="num" id="stE">0<i>万円</i></b></div>
   </div>
@@ -567,8 +569,8 @@ footer{
     <div class="meta" id="kTotalMeta"></div>
     <div class="stack" id="stack"></div>
     <div class="lg">
-      <span><i style="background:#b8960c"></i>請負工事</span>
-      <span><i style="background:#c9a227"></i>設計・申請</span>
+      <span><i style="background:#b8960c"></i>工事費</span>
+      <span><i style="background:#c9a227"></i>諸費用</span>
       <span><i style="background:#6b7f8e"></i>消費税</span>
       <span><i style="background:#8b1a1a"></i>その他</span>
       <span><i style="background:#3f5f7a"></i>土地</span>
@@ -734,9 +736,20 @@ const KAISU_INFO={
 };
 
 const STD_DEF={
-  tanka:130, futai:300, kucho:200, gaiko:200, yobiRate:5,
-  kanriRate:0.5, chousaM2:2500, shinsei:50,
-  hoken:30, touki:50, saiji:20, kagu:200
+  tanka:130,
+  futai:300,      // 2 付帯工事
+  kucho:250,      // 3 エアロテック
+  solar:30,       // 4 太陽光
+  rc:0,           // 5 RC工事
+  gaiko:0,        // 7 外構
+  kaitai:0,       // 8 解体
+  hikikomi:0,     // 9 引込み工事
+  jiban:0,        // 10 地盤改良
+  lighting:200,   // 11 照明・カーテン
+  sonota:0,       // 12 その他
+  yobiRate:5,
+  designRate:2.5, kanriRate:0.5, chousaM2:2500, shinsei:50,
+  hoken:30, touki:50, saiji:20
 };
 let STD=Object.assign({},STD_DEF);
 
@@ -747,7 +760,7 @@ const LOANFEE={
   flat:{label:'定額 11万円', calc:()=>11},
   none:{label:'計上しない', calc:()=>0}
 };
-let loanFeeMode='r22';
+let loanFeeMode='none';
 function loanFeeAuto(k){ return LOANFEE[loanFeeMode].calc(k); }
 function setLoanFeeMode(m){
   loanFeeMode=m;
@@ -756,39 +769,50 @@ function setLoanFeeMode(m){
 }
 
 const ROWS={
+  /* 工事費（税抜・課税対象） */
   A:[
-    {id:'honTai', n:'主体工事費（上の建物で計算）', h:'ここに数字を入れると、坪単価の計算より優先されます', full:true, auto:d=>d.tsubo*tankaVal()},
-    {id:'futai',  n:'付帯工事費', h:'屋外給排水・電気ガス等。100万円単位で調整できます',
+    {id:'honTai', n:'1 主体工事費（上の建物で計算）', h:'ここに数字を入れると、坪単価の計算より優先されます',
+      full:true, auto:d=>d.tsubo*tankaVal()},
+    {id:'futai',  n:'2 付帯工事費', h:'屋外給排水・電気ガス等',
       step:100, chips:[100,200,300,400,500], auto:()=>STD.futai},
-    {id:'kucho',  n:'全館空調（エアロテック）', h:'50万円単位で調整できます',
-      step:50, chips:[100,150,200,250,300], auto:()=>STD.kucho},
-    {id:'gaiko',  n:'外構工事', h:'100万円単位で調整できます',
-      step:100, chips:[100,200,300,400,500], auto:()=>STD.gaiko},
-    {id:'kaitai', n:'解体工事', h:'建替えの場合に入力。100万円きざみで選べます',
-      step:100, chips:[0,100,200,300,400,500], auto:()=>0},
-    {id:'jiban',  n:'地盤改良工事', h:'調査前は0のまま。判明後に入力',
-      step:50, chips:[0,50,100,150,200,300], auto:()=>0},
+    {id:'kucho',  n:'3 エアロテック（全館空調）', h:'',
+      step:50, chips:[150,200,250,300,350], auto:()=>STD.kucho},
+    {id:'solar',  n:'4 太陽光発電', h:'',
+      step:10, chips:[0,30,100,150,200,250], auto:()=>STD.solar},
+    {id:'rc',     n:'5 RC・地下工事', h:'該当しなければ0のまま',
+      step:100, chips:[0,100,200,300,500], auto:()=>STD.rc},
+    {id:'gaiko',  n:'7 外構工事', h:'',
+      step:100, chips:[0,100,200,300,400,500], auto:()=>STD.gaiko},
+    {id:'kaitai', n:'8 解体工事', h:'建替えの場合に入力',
+      step:100, chips:[0,100,200,300,400,500], auto:()=>STD.kaitai},
+    {id:'hikikomi', n:'9 引込み工事', h:'給水・排水・電気・ガスの引込み',
+      step:10, chips:[0,30,50,100,150,200], auto:()=>STD.hikikomi},
+    {id:'jiban',  n:'10 地盤改良工事', h:'調査前は0のまま。判明後に入力',
+      step:50, chips:[0,50,100,150,200,300], auto:()=>STD.jiban},
+    {id:'lighting', n:'11 照明・カーテン', h:'',
+      step:50, chips:[0,100,150,200,300,500], auto:()=>STD.lighting},
     {id:'karizumai', n:'仮住まい・引越', h:'建替えで仮住まいが必要な場合',
-      step:50, chips:[0,50,100,150,200,300], auto:()=>0},
-    {id:'yobi',   n:'追加変更工事の予備費', h:'', auto:d=>d.honTai*STD.yobiRate/100}
+      step:50, chips:[0,50,100,150,200,300], full:true, auto:()=>0},
+    {id:'yobi',   n:'追加変更工事の予備費', h:'', full:true, auto:d=>d.honTai*STD.yobiRate/100}
   ],
+  /* 6 諸費用（税抜・課税対象） */
   B:[
-    {id:'sekkei', n:'設計料', h:'', auto:d=>d.designBase*designRate/100},
-    {id:'kanri',  n:'工事監理費', h:'', auto:d=>d.designBase*STD.kanriRate/100},
-    {id:'chousa', n:'敷地調査・構造計算料', h:'', auto:d=>d.tsubo*TSUBO_M2*STD.chousaM2/10000},
-    {id:'shinsei',n:'申請費用', h:'確認申請・中間／完了検査。下から選べます',
+    {id:'sekkei', n:'設計・監理費', h:'', auto:d=>d.designBase*(designRate+STD.kanriRate)/100},
+    {id:'chousa', n:'構造計算・敷地調査費', h:'', auto:d=>d.tsubo*TSUBO_M2*STD.chousaM2/10000},
+    {id:'shinsei',n:'申請費用', h:'確認申請・中間／完了検査',
       step:10, chips:[30,40,50,80,100], auto:()=>STD.shinsei}
   ],
+  /* 12 その他の費用（非課税・実費） */
   C:[
-    {id:'hoken', n:'火災保険料', h:'下から選べます',
+    {id:'hoken', n:'火災保険料', h:'',
       step:10, chips:[10,20,30,50,80], auto:()=>STD.hoken},
-    {id:'touki', n:'登記・印紙・不動産取得税', h:'下から選べます',
+    {id:'touki', n:'登記・印紙・不動産取得税', h:'',
       step:10, chips:[30,50,80,100,150], auto:()=>STD.touki},
     {id:'saiji', n:'祭事費用', h:'地鎮祭・上棟式等',
       step:10, chips:[0,10,20,30], auto:()=>STD.saiji},
-    {id:'kagu',  n:'造作家具・カーテン', h:'下から選べます',
-      step:100, chips:[100,200,300,500,1000], auto:()=>STD.kagu},
-    {id:'loanFee', n:'ローン事務手数料・保証料', h:'計算方法は上のボタンで選べます',
+    {id:'sonota', n:'12 その他', h:'上のどれにも入らない費用',
+      step:50, chips:[0,50,100,200,300], auto:()=>STD.sonota},
+    {id:'loanFee', n:'13 ローン事務手数料・保証料', h:'計算方法は上のボタンで選べます。初期は計上しません',
       step:10, auto:d=>loanFeeAuto(d.kariire)}
   ],
   E:[
@@ -804,10 +828,12 @@ const ROWS={
 };
 const STD_ROWS=[
   {id:'std_yobiRate', k:'yobiRate', n:'予備費（本体工事費の）', u:'%'},
-  {id:'std_kanriRate', k:'kanriRate', n:'監理費率', u:'%'},
-  {id:'std_chousaM2', k:'chousaM2', n:'敷地調査・構造計算', u:'円/㎡'},
+  {id:'std_kanriRate', k:'kanriRate', n:'監理費率（設計料率に加算）', u:'%'},
+  {id:'std_chousaM2', k:'chousaM2', n:'構造計算・敷地調査', u:'円/㎡'},
   {id:'std_futai', k:'futai', n:'付帯工事の初期値', u:'万円'},
-  {id:'std_kucho', k:'kucho', n:'全館空調の初期値', u:'万円'},
+  {id:'std_kucho', k:'kucho', n:'エアロテックの初期値', u:'万円'},
+  {id:'std_solar', k:'solar', n:'太陽光の初期値', u:'万円'},
+  {id:'std_lighting', k:'lighting', n:'照明・カーテンの初期値', u:'万円'},
   {id:'std_gaiko', k:'gaiko', n:'外構工事の初期値', u:'万円'}
 ];
 
@@ -1107,8 +1133,9 @@ function calc(){
   $('kariireTag').className='auto '+(has('kariire')?'man':'on');
   $('kariire').placeholder=man(Math.max(0,d.total-d.jiko));
   if(d.jikoRows>0) $('jiko').value=Math.round(d.jikoRows);
-  $('designHint').textContent='対象工事費 '+man(d.designBase)+'万円 × '+designRate+'% ＝ 設計料 '+
-    man(d.designBase*designRate/100)+'万円／監理費 '+man(d.designBase*STD.kanriRate/100)+'万円';
+  $('designHint').textContent='対象工事費（主体＋付帯＋エアロテック）'+man(d.designBase)+'万円 × '+
+    (designRate+STD.kanriRate).toFixed(1)+'%（設計'+designRate+'％＋監理'+STD.kanriRate+'％）＝ '+
+    man(d.designBase*(designRate+STD.kanriRate)/100)+'万円';
   $('loanFeeHint').textContent=LOANFEE[loanFeeMode].label+' ＝ '+man(loanFeeAuto(d.kariire))+'万円';
   $('tanka').placeholder=man(STD.tanka);
   $('tankaTag').textContent=has('tanka')?'選択中':'目安';
@@ -1141,8 +1168,8 @@ function calc(){
 
 function parts(d){
   return [
-    {n:'請負工事',v:d.A,c:'#b8960c'},
-    {n:'設計・申請',v:d.B,c:'#c9a227'},
+    {n:'工事費',v:d.A,c:'#b8960c'},
+    {n:'諸費用',v:d.B,c:'#c9a227'},
     {n:'消費税',v:d.tax,c:'#6b7f8e'},
     {n:'その他費用',v:d.C,c:'#8b1a1a'},
     {n:'土地関連',v:d.E,c:'#3f5f7a'}
@@ -1212,11 +1239,11 @@ function drawList(d){
   };
   const sub=(t,v)=>{ h+='<tr class="sub"><td>'+t+'</td><td class="n">'+man(v)+'</td></tr>'; };
 
-  grp('A　請負工事');          ROWS.A.forEach(line); sub('小計（税抜）',d.A);
-  grp('B　設計・調査・申請');  ROWS.B.forEach(line); sub('小計（税抜）',d.B);
+  grp('工事費');          ROWS.A.forEach(line); sub('小計（税抜）',d.A);
+  grp('諸費用（設計・構造計算・申請）');  ROWS.B.forEach(line); sub('小計（税抜）',d.B);
   sub('消費税（'+num('taxRate')+'%）',d.tax);
-  grp('C　その他の費用');      ROWS.C.forEach(line); sub('小計',d.C);
-  grp('E　土地関連');
+  grp('その他の費用');      ROWS.C.forEach(line); sub('小計',d.C);
+  grp('土地関連');
   if(d.tochi>0) h+='<tr><td>土地購入費用</td><td class="n">'+man(d.tochi)+'</td></tr>';
   ROWS.E.forEach(line); sub('小計',d.E);
   h+='<tr class="total"><td>総事業費</td><td class="n">'+man(d.total)+'</td></tr>';
@@ -1292,11 +1319,11 @@ function copyText(){
   if(d.tsubo>0) L.push('建物：'+KAISU_INFO[kaisu].label+'　延床 '+d.tsubo.toFixed(1)+'坪（'+(d.tsubo*TSUBO_M2).toFixed(1)+'㎡）');
   L.push('');
   L.push('■ 必要資金');
-  L.push('A 請負工事（税抜）　'+man(d.A)+'万円');
-  L.push('B 設計・調査・申請（税抜）　'+man(d.B)+'万円');
+  L.push('工事費（税抜）　'+man(d.A)+'万円');
+  L.push('諸費用・設計等（税抜）　'+man(d.B)+'万円');
   L.push('　消費税（'+num('taxRate')+'%）　'+man(d.tax)+'万円');
-  L.push('C その他の費用　'+man(d.C)+'万円');
-  if(d.E>0) L.push('E 土地関連　'+man(d.E)+'万円');
+  L.push('その他の費用　'+man(d.C)+'万円');
+  if(d.E>0) L.push('土地関連　'+man(d.E)+'万円');
   L.push('────────────');
   L.push('総事業費　'+man(d.total)+'万円');
   L.push('');
@@ -1430,11 +1457,11 @@ function copyTable(){
     });
     row(label,sum);
   };
-  sec('A 請負工事',ROWS.A,d.A,'小計（税抜）');
-  sec('B 設計・調査・申請',ROWS.B,d.B,'小計（税抜）');
+  sec('工事費',ROWS.A,d.A,'小計（税抜）');
+  sec('諸費用（設計・構造計算・申請）',ROWS.B,d.B,'小計（税抜）');
   row('消費税（'+num('taxRate')+'%）',d.tax);
-  sec('C その他の費用',ROWS.C,d.C,'小計');
-  L.push('E 土地関連\t');
+  sec('その他の費用',ROWS.C,d.C,'小計');
+  L.push('土地関連\t');
   if(d.tochi>0) row('土地購入費用',d.tochi);
   ROWS.E.forEach(function(r){
     const v=d.val[r.id]||0;
@@ -1470,7 +1497,7 @@ function apply(o){
   SAVE_IDS.forEach(id=>{ if(o[id]!==undefined) $(id).value=o[id]; });
   designRate=o.designRate||2.5; setDesignRate(designRate);
   loanType=o.loanType||'fixed35'; markLoanType();
-  setLoanFeeMode(o.loanFeeMode||'r22');
+  setLoanFeeMode(o.loanFeeMode||'none');
   setHoushiki(o.houshiki||'ganri');
   setMode(o.mode||'easy');
   onArea();
@@ -1523,7 +1550,7 @@ function resetAll(){
   if(!confirm('入力内容をすべてクリアします。保存済みプランは消えません。よろしいですか？')) return;
   SAVE_IDS.forEach(id=>$(id).value='');
   Object.keys(DEFAULTS).forEach(k=>$(k).value=DEFAULTS[k]);
-  setMenUnit('tsubo'); setLoanType('fixed35'); setDesignRate(2.5); setHoushiki('ganri'); setLoanFeeMode('r22'); setKaisu(2);
+  setMenUnit('tsubo'); setLoanType('fixed35'); setDesignRate(2.5); setHoushiki('ganri'); setLoanFeeMode('none'); setKaisu(2);
 }
 
 /* ---- 起動 ---- */
@@ -1535,7 +1562,7 @@ function resetAll(){
   setMenUnit('tsubo');
   let restored=false;
   try{ const cur=JSON.parse(localStorage.getItem(KEY_CUR)||'null'); if(cur){ apply(cur); restored=true; } }catch(e){}
-  if(!restored){ setKaisu(2); setLoanType('fixed35'); setDesignRate(2.5); setLoanFeeMode('r22'); setMode('easy'); }
+  if(!restored){ setKaisu(2); setLoanType('fixed35'); setDesignRate(2.5); setLoanFeeMode('none'); setMode('easy'); }
   renderSaved(); calc();
   scrollChipIntoView('chipTanka');
 })();
