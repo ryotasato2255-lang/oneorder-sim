@@ -317,10 +317,6 @@ footer{
     <div class="logo">資金計画<small>FINANCIAL PLAN SIMULATION</small></div>
     <button class="pbtn" onclick="openPresent()">お客様に見せる</button>
   </div>
-  <div class="mode">
-    <button id="m-easy" class="on" onclick="setMode('easy')">かんたん入力</button>
-    <button id="m-full" onclick="setMode('full')">くわしく調整</button>
-  </div>
   <div class="tabs" id="tabs">
     <button id="tab-input" class="on" onclick="showTab('input')">入力</button>
     <button id="tab-result" onclick="showTab('result')">ご提案</button>
@@ -460,6 +456,19 @@ footer{
   </div>
 
   <div class="card">
+    <div class="ttl">土地関連の内訳<span class="rt">空欄＝自動</span></div>
+    <div id="rowsE"></div>
+    <div class="sum"><span>土地関連 計</span><b class="num" id="stE">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card">
+    <div class="ttl">自己資金の内訳</div>
+    <p class="cap">内訳を入れると、上の「自己資金」に合計が入ります。</p>
+    <div id="rowsJ"></div>
+    <div class="sum"><span>自己資金 計</span><b class="num" id="stJ">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card">
     <div class="ttl"><span class="no">15</span>住宅ローン</div>
 
     <div class="f">
@@ -524,22 +533,13 @@ footer{
 
 
 
-  <div class="card full">
-    <div class="ttl">土地関連の内訳<span class="rt">空欄＝自動</span></div>
-    <div id="rowsE"></div>
-    <div class="sum"><span>土地関連 計</span><b class="num" id="stE">0<i>万円</i></b></div>
-  </div>
 
-  <div class="card full">
-    <div class="ttl">自己資金の内訳</div>
-    <p class="cap">内訳を入れると、上の「自己資金」に合計が入ります。</p>
-    <div id="rowsJ"></div>
-    <div class="sum"><span>自己資金 計</span><b class="num" id="stJ">0<i>万円</i></b></div>
-  </div>
 
-  <div class="card full">
+  <div class="card">
     <div class="ttl">自動計算の基準</div>
-    <p class="cap">空欄の項目に使う目安の単価です。ご自身の実績に合わせて変更してください（この端末に保存されます）。</p>
+    <details>
+    <summary>空欄のときに使う初期値・単価を変更する</summary>
+    <p class="cap" style="margin-top:10px">ご自身の実績に合わせて変更してください（この端末に保存されます）。</p>
     <div id="rowsStd"></div>
     <div class="f">
       <div class="lb"><span class="t">消費税率</span></div>
@@ -551,6 +551,7 @@ footer{
       </div>
     </div>
     <div style="margin-top:14px"><button class="btn" style="width:100%" onclick="resetStd()">基準を初期値に戻す</button></div>
+    </details>
   </div>
 
   <div class="card noprint">
@@ -771,8 +772,8 @@ function setLoanFeeMode(m){
 const ROWS={
   /* 工事費（税抜・課税対象） */
   A:[
-    {id:'honTai', n:'1 主体工事費（上の建物で計算）', h:'ここに数字を入れると、坪単価の計算より優先されます',
-      full:true, auto:d=>d.tsubo*tankaVal()},
+    {id:'honTai', n:'1 主体工事費', h:'上の「建物」の延床×坪単価で計算します。ここに数字を入れるとそちらが優先されます',
+      auto:d=>d.tsubo*tankaVal()},
     {id:'futai',  n:'2 付帯工事費', h:'屋外給排水・電気ガス等',
       step:100, chips:[100,200,300,400,500], auto:()=>STD.futai},
     {id:'kucho',  n:'3 エアロテック（全館空調）', h:'',
@@ -792,8 +793,8 @@ const ROWS={
     {id:'lighting', n:'11 照明・カーテン', h:'',
       step:50, chips:[0,100,150,200,300,500], auto:()=>STD.lighting},
     {id:'karizumai', n:'仮住まい・引越', h:'建替えで仮住まいが必要な場合',
-      step:50, chips:[0,50,100,150,200,300], full:true, auto:()=>0},
-    {id:'yobi',   n:'追加変更工事の予備費', h:'', full:true, auto:d=>d.honTai*STD.yobiRate/100}
+      step:50, chips:[0,50,100,150,200,300], auto:()=>0},
+    {id:'yobi',   n:'追加変更工事の予備費', h:'本体工事費の5%で自動計算しています', auto:d=>d.honTai*STD.yobiRate/100}
   ],
   /* 6 諸費用（税抜・課税対象） */
   B:[
@@ -894,12 +895,9 @@ function buildRows(){
 }
 
 /* ---- モード・タブ ---- */
-function setMode(m){
-  mode=m;
-  $('m-easy').classList.toggle('on',m==='easy');
-  $('m-full').classList.toggle('on',m==='full');
-  document.querySelectorAll('.full').forEach(el=>{ el.style.display=(m==='full')?'':'none'; });
-  showTab('input');
+function setMode(){
+  /* 入力は1画面にまとめたので、隠す項目はない */
+  document.querySelectorAll('.full').forEach(el=>{ el.style.display=''; });
 }
 function showTab(t){
   ['input','result','list','saved'].forEach(k=>{
@@ -1274,7 +1272,7 @@ function drawMsg(d){
     m.push(['warn','3階建ては構造計算適合性判定などで申請費用が増えます。金額のご確認をおすすめします。']);
   const autoCnt=ALL_ROWS.filter(r=>!has(r.id)&&(d.val[r.id]||0)>0).length;
   if(autoCnt>0)
-    m.push(['ok',autoCnt+'項目を自動計算しています。「くわしく調整」で個別に上書きできます。']);
+    m.push(['ok',autoCnt+'項目を初期値のまま計算しています。入力タブで個別に上書きできます。']);
   $('msg').innerHTML=m.map(x=>'<div class="msg '+x[0]+'"><span>'+x[1]+'</span></div>').join('');
 }
 function paintRange(r){
