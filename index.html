@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="資金計画">
+<meta name="theme-color" content="#f5f2ec">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="googlebot" content="noindex, nofollow">
+<title>資金計画シミュレーション</title>
+<style>
+:root{
+  --ink:#1a1a2e;
+  --paper:#f5f2ec;
+  --accent:#8b1a1a;
+  --accent2:#c0392b;
+  --gold:#b8960c;
+  --mid:#6b6b6b;
+  --line:#d4cec4;
+  --light:#ece8e0;
+  --white:#fff;
+  --ok:#2f7d62;
+  --shadow:0 2px 12px rgba(26,26,46,.10);
+  --shadow-lg:0 8px 32px rgba(26,26,46,.15);
+  --safe-b:env(safe-area-inset-bottom, 0px);
+  --safe-t:env(safe-area-inset-top, 0px);
+  --serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);background:var(--paper);color:var(--ink);
+  font-size:15px;line-height:1.6;padding-bottom:calc(120px + var(--safe-b));
+  overscroll-behavior-y:none;
+}
+.num{font-variant-numeric:tabular-nums}
+
+/* ===== ヘッダー ===== */
+header{
+  background:var(--white);position:sticky;top:0;z-index:50;
+  border-bottom:2px solid var(--accent);box-shadow:0 2px 12px rgba(26,26,46,.06);
+  padding:calc(10px + var(--safe-t)) 14px 0;
+}
+.hb{display:flex;align-items:center;gap:12px;padding-bottom:9px}
+.hb .logo{font-family:var(--serif);font-size:17px;letter-spacing:.1em;flex:1;line-height:1.25}
+.hb .logo small{display:block;font-family:var(--sans);font-size:10px;color:var(--mid);letter-spacing:.08em;margin-top:2px}
+.hb .pbtn{
+  background:var(--accent);color:#fff;border:none;border-radius:999px;height:38px;padding:0 16px;
+  font-family:inherit;font-size:13px;letter-spacing:.04em;font-weight:600;
+}
+.hb .pbtn:active{background:var(--accent2)}
+
+.mode{display:flex;background:var(--light);border-radius:10px;padding:3px;gap:3px;margin-bottom:9px}
+.mode button{
+  flex:1;border:none;background:none;border-radius:8px;font-family:inherit;font-size:13.5px;
+  height:38px;color:var(--mid);letter-spacing:.04em;
+}
+.mode button.on{background:var(--white);color:var(--accent);font-weight:700;box-shadow:0 1px 4px rgba(26,26,46,.12)}
+
+.tabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:3px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{
+  border:none;background:none;font-family:inherit;font-size:13px;color:var(--mid);
+  height:42px;padding:0 13px;white-space:nowrap;border-bottom:2.5px solid transparent;letter-spacing:.03em;
+}
+.tabs button.on{color:var(--accent);font-weight:700;border-bottom-color:var(--accent)}
+
+/* ===== レイアウト ===== */
+.wrap{max-width:1240px;margin:0 auto;padding:14px 12px 0}
+.pane{display:none;animation:fade .3s ease}
+.pane.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.card{background:var(--white);border-radius:12px;box-shadow:var(--shadow);padding:16px 15px;margin-bottom:12px;border:1px solid var(--line)}
+.card > .ttl{
+  font-family:var(--serif);font-size:15px;letter-spacing:.06em;
+  padding-bottom:9px;margin-bottom:12px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:9px;
+}
+.card > .ttl .no{
+  background:var(--accent);color:#fff;border-radius:5px;font-family:var(--sans);
+  font-size:10.5px;padding:2px 7px;letter-spacing:.06em;font-weight:700;flex:none;
+}
+.card > .ttl .rt{margin-left:auto;font-family:var(--sans);font-size:11px;color:var(--mid);letter-spacing:0}
+.cap{font-size:11.5px;color:var(--mid);line-height:1.65;margin-bottom:12px}
+
+/* ===== 入力 ===== */
+.f{padding:12px 0;border-bottom:1px solid var(--light)}
+.f:last-child{border-bottom:none;padding-bottom:2px}
+.f .lb{font-size:14px;margin-bottom:8px;display:flex;align-items:baseline;gap:7px}
+.f .lb .t{flex:1}
+.f .lb .auto{
+  font-size:10px;background:var(--light);color:var(--mid);border-radius:4px;padding:2px 6px;
+  letter-spacing:.04em;flex:none;
+}
+.f .lb .auto.on{background:rgba(184,150,12,.16);color:#8a7009}
+.f .lb .auto.man{background:rgba(139,26,26,.09);color:var(--accent)}
+.f .h{font-size:11px;color:var(--mid);line-height:1.5;margin-top:5px}
+
+.stp{display:flex;align-items:center;gap:8px}
+.stp .mb{
+  width:44px;height:48px;flex:none;border:1px solid var(--line);background:var(--light);
+  border-radius:10px;font-size:19px;color:var(--ink);line-height:1;font-family:inherit;
+}
+.stp .mb:active{background:var(--line)}
+.stp input{
+  flex:1;min-width:0;height:48px;padding:0 12px;border:1px solid var(--line);border-radius:10px;
+  font-family:inherit;font-size:17px;text-align:right;background:#fdfcfa;color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.stp input::placeholder{color:#b5ada0}
+.stp input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(139,26,26,.08)}
+.stp .u{font-size:12px;color:var(--mid);width:28px;flex:none}
+.f input[type=text]{
+  width:100%;height:48px;padding:0 13px;border:1px solid var(--line);border-radius:10px;
+  font-family:inherit;font-size:16px;background:#fdfcfa;
+}
+.f input[type=text]:focus{outline:none;border-color:var(--accent);background:#fff}
+
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.chips button{
+  border:1px solid var(--line);background:var(--white);border-radius:999px;
+  height:36px;padding:0 14px;font-family:inherit;font-size:13px;color:var(--mid);
+  font-variant-numeric:tabular-nums;
+}
+.chips button.on{border-color:var(--accent);background:rgba(139,26,26,.06);color:var(--accent);font-weight:700}
+.chips button:active{transform:scale(.96)}
+
+.sl{margin-top:12px}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;
+  background:var(--line);outline:none;margin:8px 0 2px;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;
+  border:2px solid var(--accent);box-shadow:0 2px 8px rgba(26,26,46,.2);
+}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid var(--accent)}
+.sl .sc{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mid)}
+
+.seg{display:flex;background:var(--light);border-radius:10px;padding:3px;gap:3px}
+.seg button{
+  flex:1;border:none;background:none;border-radius:8px;font-family:inherit;font-size:14px;
+  height:44px;color:var(--mid);letter-spacing:.03em;padding:0 4px;
+}
+.seg button.on{background:var(--white);color:var(--accent);font-weight:700;box-shadow:0 1px 4px rgba(26,26,46,.12)}
+.seg.mini button{height:36px;font-size:12.5px}
+.note{font-size:11.5px;color:var(--mid);line-height:1.65;margin-top:9px}
+
+button{cursor:pointer;font-family:inherit}
+.btn{
+  border:1px solid var(--line);background:var(--white);color:var(--ink);border-radius:10px;
+  height:48px;padding:0 16px;font-size:14px;letter-spacing:.03em;
+}
+.btn:active{transform:scale(.985)}
+.btn.fill{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.btn.del{border-color:rgba(139,26,26,.35);color:var(--accent)}
+
+.sum{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding:12px 14px;
+  background:var(--light);border-radius:10px}
+.sum span{font-size:12px;color:var(--mid);letter-spacing:.04em}
+.sum b{font-size:17px}
+.sum b i{font-size:11px;font-style:normal;color:var(--mid);margin-left:3px;font-weight:400}
+.sum.strong{background:var(--ink);color:#fff}
+.sum.strong span{color:rgba(255,255,255,.7)}
+.sum.strong b i{color:rgba(255,255,255,.7)}
+
+/* ===== 結果 ===== */
+.hero{
+  background:var(--ink);color:#fff;border-radius:14px;padding:22px 18px 18px;
+  box-shadow:var(--shadow-lg);margin-bottom:12px;position:relative;overflow:hidden;
+}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:190px;height:190px;border-radius:50%;
+  background:radial-gradient(circle,rgba(184,150,12,.2),transparent 70%)}
+.hero .k{font-size:10px;letter-spacing:.2em;color:var(--gold)}
+.hero .big{font-family:var(--serif);font-size:42px;line-height:1.08;margin:8px 0 2px}
+.hero .big i{font-size:16px;font-style:normal;font-family:var(--sans);margin-left:4px;color:rgba(255,255,255,.78)}
+.hero .meta{font-size:11.5px;color:rgba(255,255,255,.6)}
+.hero .stack{display:flex;height:7px;border-radius:4px;overflow:hidden;margin:16px 0 11px;background:rgba(255,255,255,.12)}
+.hero .stack span{transition:width .45s cubic-bezier(.4,0,.2,1)}
+.hero .lg{display:flex;flex-wrap:wrap;gap:5px 14px;font-size:10.5px;color:rgba(255,255,255,.7)}
+.hero .lg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+.hero .split{display:flex;gap:12px;margin-top:17px;padding-top:15px;border-top:1px solid rgba(255,255,255,.15)}
+.hero .split > div{flex:1}
+.hero .split .k2{font-size:9.5px;letter-spacing:.12em;color:rgba(255,255,255,.5)}
+.hero .split .v2{font-size:20px;margin-top:2px}
+.hero .split .v2 i{font-size:10.5px;font-style:normal;color:rgba(255,255,255,.62);margin-left:2px}
+
+.pay{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px 18px;
+  margin-bottom:12px;box-shadow:var(--shadow);text-align:center}
+.pay .k{font-size:10px;letter-spacing:.2em;color:var(--accent)}
+.pay .v{font-family:var(--serif);font-size:40px;line-height:1.1;margin:7px 0 2px}
+.pay .v i{font-size:15px;font-style:normal;font-family:var(--sans);color:var(--mid);margin-left:3px}
+.pay .cond{font-size:11.5px;color:var(--mid);margin-top:5px}
+.pay .ratio{display:inline-flex;margin-top:12px;padding:6px 14px;border-radius:999px;
+  background:rgba(47,125,98,.09);color:var(--ok);font-size:12px}
+.pay .ratio.hot{background:rgba(139,26,26,.08);color:var(--accent)}
+.quick{display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--light);text-align:left}
+.quick > div{flex:1}
+.quick .qk{font-size:10px;letter-spacing:.1em;color:var(--mid)}
+.quick .qv{font-size:15px;font-weight:700;margin-top:2px}
+
+.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.donut{width:142px;height:142px;border-radius:50%;flex:none;position:relative;transition:background .45s}
+.donut::after{content:"";position:absolute;inset:25px;background:var(--white);border-radius:50%}
+.donut .ctr{position:absolute;inset:0;display:grid;place-items:center;z-index:1;text-align:center}
+.donut .ctr .t1{font-size:9.5px;letter-spacing:.1em;color:var(--mid)}
+.donut .ctr .t2{font-family:var(--serif);font-size:20px}
+.dlg{flex:1;min-width:168px;display:flex;flex-direction:column;gap:8px}
+.dlg .it{display:flex;align-items:center;gap:8px;font-size:13px}
+.dlg .it i{width:9px;height:9px;border-radius:2px;flex:none}
+.dlg .it .n{flex:1;color:var(--mid);font-size:12.5px}
+.dlg .it .v{font-weight:700;font-variant-numeric:tabular-nums}
+.dlg .it .p{font-size:11px;color:var(--mid);width:36px;text-align:right}
+
+.chart{width:100%;height:140px;display:block}
+.chart-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mid);margin-top:3px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+table th,table td{padding:10px 4px;border-bottom:1px solid var(--light);text-align:left}
+table th{font-size:10.5px;color:var(--mid);letter-spacing:.08em}
+table td.n{text-align:right;font-variant-numeric:tabular-nums}
+table tr.grp td{background:var(--light);font-size:11px;letter-spacing:.08em;color:var(--accent);font-weight:700;padding:7px 6px}
+table tr.sub td{color:var(--mid);font-size:12.5px;background:#fbfaf8}
+table tr.total td{font-weight:700;font-size:15.5px;border-top:1.5px solid var(--ink);border-bottom:none}
+
+.msg{font-size:12.5px;padding:11px 13px;border-radius:10px;margin-bottom:9px;line-height:1.7;
+  display:flex;gap:9px;align-items:flex-start}
+.msg::before{content:"";width:3px;align-self:stretch;border-radius:2px;flex:none}
+.msg.warn{background:rgba(139,26,26,.055);color:var(--accent)}
+.msg.warn::before{background:var(--accent)}
+.msg.ok{background:rgba(47,125,98,.06);color:var(--ok)}
+.msg.ok::before{background:var(--ok)}
+
+details{border-top:1px solid var(--light);margin-top:4px}
+details summary{cursor:pointer;font-size:13px;padding:13px 0 3px;letter-spacing:.04em;list-style:none;
+  display:flex;align-items:center;gap:7px}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"＋";color:var(--accent);margin-left:auto}
+details[open] summary::after{content:"－"}
+.scr{max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+.sv{display:flex;align-items:center;gap:10px;padding:13px;border-radius:11px;background:#fbfaf8;
+  border:1px solid var(--line);margin-bottom:9px}
+.sv .nm{font-size:14.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sv .mt{font-size:11px;color:var(--mid);margin-top:2px}
+.sv button{height:40px;padding:0 12px;font-size:13px;border-radius:9px}
+.empty{color:var(--mid);font-size:13px;line-height:1.8;padding:6px 2px}
+
+/* ===== フッター ===== */
+footer{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,.94);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);padding:10px 12px calc(10px + var(--safe-b));
+}
+.ft{display:flex;gap:14px;margin-bottom:9px}
+.ft > div{flex:1}
+.ft .k{font-size:9.5px;letter-spacing:.12em;color:var(--mid)}
+.ft .v{font-family:var(--serif);font-size:22px;line-height:1.15;margin-top:1px}
+.ft .v i{font-size:10.5px;font-style:normal;font-family:var(--sans);color:var(--mid);margin-left:2px}
+.fb{display:flex;gap:8px}
+.fb .btn{flex:1;height:46px;padding:0 10px;font-size:13.5px}
+
+/* ===== 提示モード ===== */
+.present{position:fixed;inset:0;z-index:100;background:var(--paper);overflow-y:auto;
+  -webkit-overflow-scrolling:touch;display:none;padding:calc(20px + var(--safe-t)) 18px calc(28px + var(--safe-b))}
+.present.on{display:block;animation:fade .35s ease}
+.present .close{position:absolute;top:calc(14px + var(--safe-t));right:14px;width:42px;height:42px;
+  border-radius:50%;border:1px solid var(--line);background:#fff;font-size:17px;color:var(--mid)}
+.pz{max-width:600px;margin:0 auto}
+.pz .ph{text-align:center;margin-bottom:22px}
+.pz .ph .l1{font-size:10px;letter-spacing:.28em;color:var(--accent)}
+.pz .ph .l2{font-family:var(--serif);font-size:24px;margin:8px 0 4px;letter-spacing:.05em}
+.pz .ph .l3{font-size:12px;color:var(--mid)}
+.pz .ph .rule{width:40px;height:2px;background:var(--accent);margin:14px auto 0}
+.pz .blk{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 17px;
+  margin-bottom:11px;box-shadow:var(--shadow)}
+.pz .blk .k{font-size:10px;letter-spacing:.18em;color:var(--accent);text-align:center}
+.pz .blk .v{font-family:var(--serif);font-size:38px;text-align:center;margin-top:8px;line-height:1.1}
+.pz .blk .v i{font-size:14px;font-style:normal;font-family:var(--sans);color:var(--mid);margin-left:3px}
+.pz .blk .c{font-size:11.5px;color:var(--mid);text-align:center;margin-top:6px}
+.pz .two{display:flex;gap:11px}
+.pz .two > .blk{flex:1}
+.pz .two .v{font-size:25px}
+.pz .note{font-size:10.5px;color:var(--mid);line-height:1.85;margin-top:16px;text-align:center}
+
+@media(min-width:900px){
+  .wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding:18px}
+  .pane{display:block!important}
+  .paneSaved{grid-column:1/-1}
+  .paneResult{position:sticky;top:110px}
+  .tabs{display:none}
+  body{padding-bottom:112px}
+}
+@media(max-width:360px){ .hero .big{font-size:35px} .pay .v{font-size:33px} }
+@media print{
+  header,footer,.noprint,.tabs,.mode{display:none!important}
+  body{background:#fff;padding:0}
+  .pane{display:block!important}
+  .card,.hero,.pay{box-shadow:none;break-inside:avoid}
+  .hero{background:#1a1a2e!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hb">
+    <div class="logo">資金計画<small>FINANCIAL PLAN SIMULATION</small></div>
+    <button class="pbtn" onclick="openPresent()">お客様に見せる</button>
+  </div>
+  <div class="mode">
+    <button id="m-easy" class="on" onclick="setMode('easy')">かんたん入力</button>
+    <button id="m-full" onclick="setMode('full')">くわしく調整</button>
+  </div>
+  <div class="tabs" id="tabs">
+    <button id="tab-input" class="on" onclick="showTab('input')">入力</button>
+    <button id="tab-result" onclick="showTab('result')">ご提案</button>
+    <button id="tab-list" onclick="showTab('list')">資金リスト</button>
+    <button id="tab-saved" onclick="showTab('saved')">保存</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ==================== 入力 ==================== -->
+<div class="pane on" id="pane-input">
+
+  <div class="card">
+    <div class="ttl"><span class="no">1</span>この4つだけ<span class="rt">あとは自動計算</span></div>
+
+    <div class="f">
+      <div class="lb"><span class="t">お客様名／プラン名</span></div>
+      <input type="text" id="planName" placeholder="〇〇様　A案" oninput="calc()">
+    </div>
+
+    <div class="f">
+      <div class="lb"><span class="t">階数</span></div>
+      <div class="seg">
+        <button id="seg-f1" onclick="setKaisu(1)">平屋</button>
+        <button id="seg-f2" class="on" onclick="setKaisu(2)">2階建て</button>
+        <button id="seg-f3" onclick="setKaisu(3)">3階建て</button>
+      </div>
+      <div class="note" id="kaisuHint"></div>
+    </div>
+
+    <div class="f">
+      <div class="lb"><span class="t">延床面積</span><span class="auto" id="menConv"></span></div>
+      <div class="stp">
+        <button class="mb" onclick="step('menseki',-1)">−</button>
+        <input type="number" id="menseki" inputmode="decimal" step="0.1" placeholder="40" oninput="onArea()">
+        <button class="mb" onclick="step('menseki',1)">＋</button>
+        <span class="u" id="menUnitLabel">坪</span>
+      </div>
+      <div class="sl">
+        <input type="range" id="r_menseki" oninput="slide('menseki',this.value)">
+        <div class="sc"><span id="menMin"></span><span id="menMax"></span></div>
+      </div>
+      <div class="chips" id="chipArea"></div>
+      <div class="seg mini" style="max-width:180px;margin-top:9px">
+        <button id="seg-tsubo" class="on" onclick="setMenUnit('tsubo')">坪</button>
+        <button id="seg-m2" onclick="setMenUnit('m2')">㎡</button>
+      </div>
+    </div>
+
+    <div class="f">
+      <div class="lb"><span class="t">土地代</span><span class="auto" id="tochiTag">取得なしは0</span></div>
+      <div class="stp">
+        <button class="mb" onclick="step('tochi',-500)">−</button>
+        <input type="number" id="tochi" inputmode="decimal" step="100" placeholder="0" oninput="calc()">
+        <button class="mb" onclick="step('tochi',500)">＋</button>
+        <span class="u">万円</span>
+      </div>
+      <div class="chips" id="chipTochi"></div>
+    </div>
+
+    <div class="f">
+      <div class="lb"><span class="t">自己資金（贈与などの合計）</span></div>
+      <div class="stp">
+        <button class="mb" onclick="step('jiko',-500)">−</button>
+        <input type="number" id="jiko" inputmode="decimal" step="100" placeholder="0" oninput="calc()">
+        <button class="mb" onclick="step('jiko',500)">＋</button>
+        <span class="u">万円</span>
+      </div>
+      <div class="chips" id="chipJiko"></div>
+    </div>
+
+    <div class="sum strong"><span>総事業費（自動計算）</span><b class="num" id="qTotal">0<i>万円</i></b></div>
+    <div class="sum"><span>毎月のご返済</span><b class="num" id="qMonth">0<i>円</i></b></div>
+  </div>
+
+  <div class="card">
+    <div class="ttl"><span class="no">2</span>住宅ローン</div>
+
+    <div class="f">
+      <div class="lb"><span class="t">金利タイプ</span></div>
+      <div class="seg">
+        <button id="lt-v" onclick="setLoanType('variable')">変動</button>
+        <button id="lt-10" onclick="setLoanType('fixed10')">10年固定</button>
+        <button id="lt-35" class="on" onclick="setLoanType('fixed35')">35年固定</button>
+        <button id="lt-c" onclick="setLoanType('custom')">自由</button>
+      </div>
+      <div class="stp" style="margin-top:10px">
+        <button class="mb" onclick="step('kinri',-0.05)">−</button>
+        <input type="number" id="kinri" inputmode="decimal" step="0.01" oninput="onKinri()">
+        <button class="mb" onclick="step('kinri',0.05)">＋</button>
+        <span class="u">%</span>
+      </div>
+      <div class="h">変動0.945%／10年固定1.50%／35年固定1.82%（目安。基準を変えたいときは数値を直接入力）</div>
+    </div>
+
+    <div class="f">
+      <div class="lb"><span class="t">返済期間</span></div>
+      <div class="chips" id="chipNensu"></div>
+      <div class="stp" style="margin-top:9px">
+        <button class="mb" onclick="step('nensu',-1)">−</button>
+        <input type="number" id="nensu" inputmode="numeric" step="1" oninput="calc()">
+        <button class="mb" onclick="step('nensu',1)">＋</button>
+        <span class="u">年</span>
+      </div>
+    </div>
+
+    <div class="f">
+      <div class="lb"><span class="t">借入額</span><span class="auto on" id="kariireTag">自動</span></div>
+      <div class="stp">
+        <button class="mb" onclick="step('kariire',-500)">−</button>
+        <input type="number" id="kariire" inputmode="decimal" step="100" oninput="calc()">
+        <button class="mb" onclick="step('kariire',500)">＋</button>
+        <span class="u">万円</span>
+      </div>
+      <div class="h">空欄なら「総事業費 − 自己資金」を自動で借入額にします</div>
+    </div>
+
+    <div class="f">
+      <div class="lb"><span class="t">ご年収（世帯・税込）</span></div>
+      <div class="stp">
+        <button class="mb" onclick="step('nenshu',-100)">−</button>
+        <input type="number" id="nenshu" inputmode="decimal" step="50" placeholder="未入力" oninput="calc()">
+        <button class="mb" onclick="step('nenshu',100)">＋</button>
+        <span class="u">万円</span>
+      </div>
+      <div class="h">入力すると返済負担率を判定します</div>
+    </div>
+
+    <div class="f full">
+      <div class="lb"><span class="t">返済方式</span></div>
+      <div class="seg">
+        <button id="segGanri" class="on" onclick="setHoushiki('ganri')">元利均等</button>
+        <button id="segGankin" onclick="setHoushiki('gankin')">元金均等</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card full">
+    <div class="ttl"><span class="no">A</span>請負工事<span class="rt">空欄＝自動</span></div>
+    <p class="cap">金額は税抜・万円。空欄のままなら延床坪数から目安を自動で入れます。数字を入れるとその値が優先されます。</p>
+    <div id="rowsA"></div>
+    <div class="sum"><span>請負工事 計（税抜）</span><b class="num" id="stA">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card full">
+    <div class="ttl"><span class="no">B</span>設計・調査・申請<span class="rt">空欄＝自動</span></div>
+    <p class="cap">設計料は「主体＋付帯＋空調」の合計に対する率、構造計算・調査料は延床㎡単価で自動計算します。</p>
+    <div class="f">
+      <div class="lb"><span class="t">設計料率</span></div>
+      <div class="seg mini">
+        <button id="dr-25" class="on" onclick="setDesignRate(2.5)">2.5%（標準）</button>
+        <button id="dr-30" onclick="setDesignRate(3)">3.0%（BIM等）</button>
+      </div>
+      <div class="h" id="designHint"></div>
+    </div>
+    <div id="rowsB"></div>
+    <div class="sum"><span>設計・調査・申請 計（税抜）</span><b class="num" id="stB">0<i>万円</i></b></div>
+    <div class="sum"><span>消費税（<span id="taxRateLabel">10</span>%）</span><b class="num" id="stTax">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card full">
+    <div class="ttl"><span class="no">C</span>その他の費用<span class="rt">空欄＝自動</span></div>
+    <p class="cap">金額はボタンで選べます。金額を直接入れると、その値が優先されます。</p>
+    <div class="f">
+      <div class="lb"><span class="t">ローン事務手数料の計算方法</span></div>
+      <div class="seg mini">
+        <button id="lf-r22" class="on" onclick="setLoanFeeMode('r22')">借入×2.2%</button>
+        <button id="lf-r11" onclick="setLoanFeeMode('r11')">借入×1.1%</button>
+        <button id="lf-flat" onclick="setLoanFeeMode('flat')">定額11万</button>
+        <button id="lf-none" onclick="setLoanFeeMode('none')">なし</button>
+      </div>
+      <div class="h" id="loanFeeHint"></div>
+    </div>
+    <div id="rowsC"></div>
+    <div class="sum"><span>その他費用 計</span><b class="num" id="stC">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card full">
+    <div class="ttl"><span class="no">E</span>土地関連<span class="rt">空欄＝自動</span></div>
+    <div id="rowsE"></div>
+    <div class="sum"><span>土地関連 計</span><b class="num" id="stE">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card full">
+    <div class="ttl">自己資金の内訳</div>
+    <p class="cap">内訳を入れると、上の「自己資金」に合計が入ります。</p>
+    <div id="rowsJ"></div>
+    <div class="sum"><span>自己資金 計</span><b class="num" id="stJ">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card full">
+    <div class="ttl">自動計算の基準</div>
+    <p class="cap">空欄の項目に使う目安の単価です。ご自身の実績に合わせて変更してください（この端末に保存されます）。</p>
+    <div id="rowsStd"></div>
+    <div class="f">
+      <div class="lb"><span class="t">消費税率</span></div>
+      <div class="stp">
+        <button class="mb" onclick="step('taxRate',-1)">−</button>
+        <input type="number" id="taxRate" inputmode="decimal" step="1" oninput="calc()">
+        <button class="mb" onclick="step('taxRate',1)">＋</button>
+        <span class="u">%</span>
+      </div>
+    </div>
+    <div style="margin-top:14px"><button class="btn" style="width:100%" onclick="resetStd()">基準を初期値に戻す</button></div>
+  </div>
+
+  <div class="card noprint">
+    <div style="display:flex;gap:9px">
+      <button class="btn fill" style="flex:1" onclick="savePlan()">このプランを保存</button>
+      <button class="btn" onclick="resetAll()">クリア</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ご提案 ==================== -->
+<div class="pane paneResult" id="pane-result">
+  <div class="hero">
+    <div class="k">総事業費</div>
+    <div class="big num" id="kTotal">0<i>万円</i></div>
+    <div class="meta" id="kTotalMeta"></div>
+    <div class="stack" id="stack"></div>
+    <div class="lg">
+      <span><i style="background:#b8960c"></i>請負工事</span>
+      <span><i style="background:#c9a227"></i>設計・申請</span>
+      <span><i style="background:#6b7f8e"></i>消費税</span>
+      <span><i style="background:#8b1a1a"></i>その他</span>
+      <span><i style="background:#3f5f7a"></i>土地</span>
+    </div>
+    <div class="split">
+      <div><div class="k2">自己資金</div><div class="v2 num" id="kJiko">0<i>万円</i></div></div>
+      <div><div class="k2">お借入額</div><div class="v2 num" id="kKariire">0<i>万円</i></div></div>
+    </div>
+  </div>
+
+  <div class="pay">
+    <div class="k">毎月のご返済</div>
+    <div class="v num" id="kMonth">0<i>円</i></div>
+    <div class="cond" id="kMonthCond"></div>
+    <div id="ratioWrap"></div>
+    <div class="quick">
+      <div><div class="qk">総返済額</div><div class="qv num" id="kSum">0万円</div></div>
+      <div><div class="qk">うち利息</div><div class="qv num" id="kRisoku">0万円</div></div>
+      <div><div class="qk">完済</div><div class="qv num" id="kEnd">－</div></div>
+    </div>
+  </div>
+
+  <div id="msg"></div>
+
+  <div class="card">
+    <div class="ttl">費用の構成</div>
+    <div class="donut-wrap">
+      <div class="donut" id="donut"><div class="ctr"><div><div class="t1">総事業費</div><div class="t2 num" id="dTotal">0</div></div></div></div>
+      <div class="dlg" id="dlg"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ttl">ご返済の推移</div>
+    <svg class="chart" id="chart" viewBox="0 0 320 140" preserveAspectRatio="none"></svg>
+    <div class="chart-x"><span>お借入</span><span id="chartMid"></span><span id="chartEnd"></span></div>
+    <details class="noprint">
+      <summary>年ごとの返済・残高</summary>
+      <div class="scr"><table id="schedule"></table></div>
+    </details>
+  </div>
+</div>
+
+<!-- ==================== 資金リスト ==================== -->
+<div class="pane" id="pane-list">
+  <div class="card">
+    <div class="ttl">資金リスト</div>
+    <p class="cap">区分ごとの明細です。自動計算した項目には「自動」と表示しています。</p>
+    <table id="breakdown"></table>
+    <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap" class="noprint">
+      <button class="btn" style="flex:1;min-width:140px" onclick="copyText()">文章でコピー</button>
+      <button class="btn" style="flex:1;min-width:140px" onclick="copyTable()">表でコピー（Excel用）</button>
+      <button class="btn" style="flex:1;min-width:100px" onclick="window.print()">印刷・PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 保存 ==================== -->
+<div class="pane paneSaved" id="pane-saved">
+  <div class="card noprint">
+    <div class="ttl">保存したプラン</div>
+    <div id="savedList"></div>
+  </div>
+
+  <div class="card noprint">
+    <div class="ttl">データの書き出し・読み込み</div>
+    <p class="cap">
+      保存したプランはこの端末のブラウザの中だけにあります。機種変更や、パソコンとの受け渡しのときは
+      JSONファイルに書き出してください。iPhoneでは「ファイル」アプリに保存されます。
+    </p>
+    <div class="f">
+      <div class="lb"><span class="t">全データ（保存プラン＋計算の基準）</span></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn" style="flex:1;min-width:150px" onclick="exportAll()">JSONファイルで保存</button>
+        <button class="btn" style="flex:1;min-width:150px" onclick="copyJSON(true)">JSONをコピー</button>
+      </div>
+    </div>
+    <div class="f">
+      <div class="lb"><span class="t">いま入力中のプランだけ</span></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn" style="flex:1;min-width:150px" onclick="exportOne()">JSONファイルで保存</button>
+        <button class="btn" style="flex:1;min-width:150px" onclick="copyJSON(false)">JSONをコピー</button>
+      </div>
+    </div>
+    <div class="f">
+      <div class="lb"><span class="t">読み込み</span></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn" style="flex:1;min-width:150px" onclick="document.getElementById('fileIn').click()">JSONファイルから</button>
+        <button class="btn" style="flex:1;min-width:150px" onclick="pasteJSON()">貼り付けて読み込む</button>
+      </div>
+      <input type="file" id="fileIn" accept=".json,application/json" style="display:none" onchange="importFile(this)">
+      <div class="h">読み込んだプランは、いまの一覧に追加されます（同じ名前は「（読込）」を付けて区別します）。</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <div class="ft">
+    <div><div class="k">総事業費</div><div class="v num" id="fTotal">0<i>万円</i></div></div>
+    <div><div class="k">毎月のご返済</div><div class="v num" id="fMonth">0<i>円</i></div></div>
+  </div>
+  <div class="fb">
+    <button class="btn acc" onclick="openPresent()">お客様に見せる</button>
+    <button class="btn" onclick="savePlan()">保存</button>
+    <button class="btn" onclick="copyText()">コピー</button>
+  </div>
+</footer>
+
+<div class="present" id="present">
+  <button class="close" onclick="closePresent()">✕</button>
+  <div class="pz">
+    <div class="ph">
+      <div class="l1">FINANCIAL PLAN</div>
+      <div class="l2" id="pName">資金計画</div>
+      <div class="l3" id="pBuild"></div>
+      <div class="rule"></div>
+    </div>
+    <div class="blk">
+      <div class="k">総事業費</div>
+      <div class="v num" id="pTotal">0<i>万円</i></div>
+      <div class="c" id="pTotalC"></div>
+      <div class="stack" id="pStack" style="display:flex;height:8px;border-radius:5px;overflow:hidden;margin-top:16px;background:#e5e0d6"></div>
+      <div class="dlg" id="pDlg" style="margin-top:15px"></div>
+    </div>
+    <div class="two">
+      <div class="blk"><div class="k">自己資金</div><div class="v num" id="pJiko">0<i>万円</i></div></div>
+      <div class="blk"><div class="k">お借入額</div><div class="v num" id="pKariire">0<i>万円</i></div></div>
+    </div>
+    <div class="blk">
+      <div class="k">毎月のご返済</div>
+      <div class="v num" id="pMonth">0<i>円</i></div>
+      <div class="c" id="pMonthC"></div>
+    </div>
+    <div class="two">
+      <div class="blk"><div class="k">総返済額</div><div class="v num" id="pSum">0<i>万円</i></div></div>
+      <div class="blk"><div class="k">うち利息</div><div class="v num" id="pRisoku">0<i>万円</i></div></div>
+    </div>
+    <p class="note">
+      本試算は概算です。金利・諸費用・税額は、金融機関の商品内容やご契約条件により変動します。<br>
+      正式なご返済額は金融機関の審査結果に基づきます。
+    </p>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   資金計画シミュレーション
+   空欄の項目は延床坪数などから自動計算。入力すればその値が優先。
+   ========================================================= */
+const KEY='shikin-plans-v4', KEY_CUR='shikin-current-v4', KEY_STD='shikin-std-v5';
+const TSUBO_M2=3.305785;
+const LOAN_RATES={variable:0.945, fixed10:1.50, fixed35:1.82};
+
+let mode='easy', houshiki='ganri', kaisu=2, menUnit='tsubo', loanType='fixed35', designRate=2.5;
+let lastAuto={};
+
+const KAISU_INFO={
+  1:{tanka:145,label:'平屋',hint:'同じ延床でも基礎と屋根が大きくなるため、坪単価は上がりやすい構成です。'},
+  2:{tanka:130,label:'2階建て',hint:'最も標準的な構成です。坪単価は基準値として扱います。'},
+  3:{tanka:142,label:'3階建て',hint:'構造計算や準耐火の仕様が加わるため、坪単価と申請費用が上がりやすい構成です。'}
+};
+
+const STD_DEF={
+  tanka:130, futai:300, kucho:200, gaiko:200, yobiRate:5,
+  kanriRate:0.5, chousaM2:2500, shinsei:50,
+  hoken:30, touki:50, saiji:20, kagu:200
+};
+let STD=Object.assign({},STD_DEF);
+
+/* ローン事務手数料の計算方法 */
+const LOANFEE={
+  r22:{label:'借入額×2.2%', calc:k=>k*0.022},
+  r11:{label:'借入額×1.1%', calc:k=>k*0.011},
+  flat:{label:'定額 11万円', calc:()=>11},
+  none:{label:'計上しない', calc:()=>0}
+};
+let loanFeeMode='r22';
+function loanFeeAuto(k){ return LOANFEE[loanFeeMode].calc(k); }
+function setLoanFeeMode(m){
+  loanFeeMode=m;
+  Object.keys(LOANFEE).forEach(k=>$('lf-'+k).classList.toggle('on',k===m));
+  calc();
+}
+
+const ROWS={
+  A:[
+    {id:'honTai', n:'主体工事費', h:'延床坪数 × 坪単価', auto:d=>d.tsubo*STD.tanka},
+    {id:'futai',  n:'付帯工事費', h:'屋外給排水・電気ガス等。100万円単位で調整できます',
+      step:100, chips:[100,200,300,400,500], auto:()=>STD.futai},
+    {id:'kucho',  n:'全館空調（エアロテック）', h:'50万円単位で調整できます',
+      step:50, chips:[100,150,200,250,300], auto:()=>STD.kucho},
+    {id:'gaiko',  n:'外構工事', h:'100万円単位で調整できます',
+      step:100, chips:[100,200,300,400,500], auto:()=>STD.gaiko},
+    {id:'kaitai', n:'解体工事', h:'建替えの場合に入力', auto:()=>0},
+    {id:'jiban',  n:'地盤改良工事', h:'調査前は0。判明後に入力', auto:()=>0},
+    {id:'karizumai', n:'仮住まい・引越', h:'', auto:()=>0},
+    {id:'yobi',   n:'追加変更工事の予備費', h:'', auto:d=>d.honTai*STD.yobiRate/100}
+  ],
+  B:[
+    {id:'sekkei', n:'設計料', h:'', auto:d=>d.designBase*designRate/100},
+    {id:'kanri',  n:'工事監理費', h:'', auto:d=>d.designBase*STD.kanriRate/100},
+    {id:'chousa', n:'敷地調査・構造計算料', h:'', auto:d=>d.tsubo*TSUBO_M2*STD.chousaM2/10000},
+    {id:'shinsei',n:'申請費用', h:'確認申請・中間／完了検査。下から選べます',
+      step:10, chips:[30,40,50,80,100], auto:()=>STD.shinsei}
+  ],
+  C:[
+    {id:'hoken', n:'火災保険料', h:'下から選べます',
+      step:10, chips:[10,20,30,50,80], auto:()=>STD.hoken},
+    {id:'touki', n:'登記・印紙・不動産取得税', h:'下から選べます',
+      step:10, chips:[30,50,80,100,150], auto:()=>STD.touki},
+    {id:'saiji', n:'祭事費用', h:'地鎮祭・上棟式等',
+      step:10, chips:[0,10,20,30], auto:()=>STD.saiji},
+    {id:'kagu',  n:'造作家具・カーテン', h:'下から選べます',
+      step:100, chips:[100,200,300,500,1000], auto:()=>STD.kagu},
+    {id:'loanFee', n:'ローン事務手数料・保証料', h:'計算方法は上のボタンで選べます',
+      step:10, auto:d=>loanFeeAuto(d.kariire)}
+  ],
+  E:[
+    {id:'chukai', n:'不動産仲介手数料', h:'土地代×3%＋6万円＋消費税', auto:d=>d.tochi>0?(d.tochi*0.03+6)*(1+d.taxRate):0},
+    {id:'landOther', n:'その他土地関連費用', h:'印紙・登記等', auto:()=>0}
+  ],
+  J:[
+    {id:'jikoCash', n:'預貯金', h:'', auto:()=>0},
+    {id:'zouyo', n:'贈与・親族援助', h:'', auto:()=>0},
+    {id:'baikyaku', n:'売却代金・その他', h:'', auto:()=>0},
+    {id:'hojo', n:'補助金・給付金', h:'', auto:()=>0}
+  ]
+};
+const STD_ROWS=[
+  {id:'std_yobiRate', k:'yobiRate', n:'予備費（本体工事費の）', u:'%'},
+  {id:'std_kanriRate', k:'kanriRate', n:'監理費率', u:'%'},
+  {id:'std_chousaM2', k:'chousaM2', n:'敷地調査・構造計算', u:'円/㎡'},
+  {id:'std_futai', k:'futai', n:'付帯工事の初期値', u:'万円'},
+  {id:'std_kucho', k:'kucho', n:'全館空調の初期値', u:'万円'},
+  {id:'std_gaiko', k:'gaiko', n:'外構工事の初期値', u:'万円'}
+];
+
+const ALL_ROWS=[].concat(ROWS.A,ROWS.B,ROWS.C,ROWS.E,ROWS.J);
+const ROW_IDS=ALL_ROWS.map(r=>r.id);
+const BASE_IDS=['planName','menseki','tochi','jiko','kariire','kinri','nensu','nenshu','taxRate'];
+const SAVE_IDS=BASE_IDS.concat(ROW_IDS);
+const DEFAULTS={kinri:LOAN_RATES.fixed35, nensu:35, taxRate:10};
+
+const $=id=>document.getElementById(id);
+const num=id=>{const v=parseFloat($(id).value);return isFinite(v)?v:0;};
+const has=id=>{const e=$(id);return !!e && e.value.trim()!=='';};
+const man=n=>Math.round(n).toLocaleString('ja-JP');
+const yen=n=>Math.round(n).toLocaleString('ja-JP');
+
+/* ---- 行UIの生成 ---- */
+function rowHTML(r){
+  const st=r.step||10;
+  const chips=r.chips
+    ? '<div class="chips" id="chip_'+r.id+'">'+
+      r.chips.map(v=>'<button onclick="setVal(\''+r.id+'\','+v+')">'+man(v)+'</button>').join('')+
+      '</div>'
+    : '';
+  return '<div class="f">'+
+    '<div class="lb"><span class="t">'+r.n+'</span><span class="auto on" id="tag_'+r.id+'">自動</span></div>'+
+    '<div class="stp">'+
+      '<button class="mb" onclick="step(\''+r.id+'\',-'+st+')">−</button>'+
+      '<input type="number" id="'+r.id+'" inputmode="decimal" step="'+st+'" oninput="calc()">'+
+      '<button class="mb" onclick="step(\''+r.id+'\','+st+')">＋</button>'+
+      '<span class="u">万円</span>'+
+    '</div>'+
+    chips+
+    (r.h?'<div class="h">'+r.h+'</div>':'')+
+  '</div>';
+}
+function buildRows(){
+  ['A','B','C','E','J'].forEach(g=>{ $('rows'+g).innerHTML=ROWS[g].map(rowHTML).join(''); });
+  $('rowsStd').innerHTML=STD_ROWS.map(s=>
+    '<div class="f"><div class="lb"><span class="t">'+s.n+'</span></div>'+
+    '<div class="stp"><input type="number" id="'+s.id+'" inputmode="decimal" step="0.1" oninput="onStd()">'+
+    '<span class="u">'+s.u+'</span></div></div>').join('');
+  $('chipTochi').innerHTML=[0,3000,5000,8000,10000,15000].map(v=>
+    '<button onclick="setVal(\'tochi\','+v+')">'+(v===0?'なし':man(v))+'</button>').join('');
+  $('chipJiko').innerHTML=[500,1000,2000,3000,5000].map(v=>
+    '<button onclick="setVal(\'jiko\','+v+')">'+man(v)+'</button>').join('');
+  $('chipNensu').innerHTML=[20,25,30,35].map(v=>
+    '<button onclick="setVal(\'nensu\','+v+')">'+v+'年</button>').join('');
+}
+
+/* ---- モード・タブ ---- */
+function setMode(m){
+  mode=m;
+  $('m-easy').classList.toggle('on',m==='easy');
+  $('m-full').classList.toggle('on',m==='full');
+  document.querySelectorAll('.full').forEach(el=>{ el.style.display=(m==='full')?'':'none'; });
+  showTab('input');
+}
+function showTab(t){
+  ['input','result','list','saved'].forEach(k=>{
+    $('pane-'+k).classList.toggle('on',k===t);
+    $('tab-'+k).classList.toggle('on',k===t);
+  });
+  window.scrollTo(0,0);
+}
+
+/* ---- 小物操作 ---- */
+function setVal(id,v){ $(id).value=v; if(id==='menseki') onArea(); else calc(); }
+function step(id,d){
+  const cur=has(id)?num(id):(lastAuto[id]||0);
+  let v=cur+d;
+  if(v<0) v=0;
+  $(id).value=Math.round(v*100)/100;
+  if(id==='menseki') onArea();
+  else if(id==='kinri') onKinri();
+  else calc();
+}
+function slide(id,v){ $(id).value=v; if(id==='menseki') onArea(); else calc(); }
+function markChips(){
+  const pairs=[['chipTochi','tochi'],['chipJiko','jiko'],['chipNensu','nensu'],['chipArea','menseki']];
+  ALL_ROWS.forEach(r=>{ if(r.chips) pairs.push(['chip_'+r.id, r.id]); });
+  pairs.forEach(p=>{
+    const box=$(p[0]); if(!box) return;
+    Array.prototype.forEach.call(box.children,b=>{
+      const mt=b.getAttribute('onclick').match(/,(-?[\d.]+)\)/);
+      if(!mt) return;
+      const v=parseFloat(mt[1]);
+      b.classList.toggle('on', has(p[1]) ? num(p[1])===v : false);
+    });
+  });
+}
+
+function setKaisu(k){
+  kaisu=k;
+  [1,2,3].forEach(i=>$('seg-f'+i).classList.toggle('on',i===k));
+  $('kaisuHint').textContent=KAISU_INFO[k].hint+'　坪単価の目安 '+KAISU_INFO[k].tanka+'万円/坪';
+  STD.tanka=KAISU_INFO[k].tanka;
+  onArea();
+}
+function setMenUnit(u){
+  const before=tsuboVal();
+  menUnit=u;
+  $('seg-tsubo').classList.toggle('on',u==='tsubo');
+  $('seg-m2').classList.toggle('on',u==='m2');
+  $('menUnitLabel').textContent=(u==='tsubo')?'坪':'㎡';
+  const r=$('r_menseki');
+  if(u==='tsubo'){
+    r.min=15;r.max=120;r.step=0.5;
+    $('menMin').textContent='15坪';$('menMax').textContent='120坪';
+    $('menseki').placeholder='40';
+    $('chipArea').innerHTML=[30,35,40,45,50,60].map(v=>'<button onclick="setVal(\'menseki\','+v+')">'+v+'坪</button>').join('');
+  }else{
+    r.min=50;r.max=400;r.step=1;
+    $('menMin').textContent='50㎡';$('menMax').textContent='400㎡';
+    $('menseki').placeholder='132';
+    $('chipArea').innerHTML=[100,120,132,150,165,200].map(v=>'<button onclick="setVal(\'menseki\','+v+')">'+v+'㎡</button>').join('');
+  }
+  if(before>0) $('menseki').value=((u==='m2')?(before*TSUBO_M2):before).toFixed(1);
+  onArea();
+}
+function tsuboVal(){
+  const v=has('menseki')?num('menseki'):parseFloat($('menseki').placeholder||'0');
+  return (menUnit==='tsubo')?v:v/TSUBO_M2;
+}
+function onArea(){
+  const t=tsuboVal();
+  $('menConv').textContent=t>0
+    ? ((menUnit==='tsubo')?'約'+(t*TSUBO_M2).toFixed(1)+'㎡':'約'+t.toFixed(1)+'坪')
+    : '';
+  calc();
+}
+function setLoanType(t){
+  loanType=t;
+  if(t!=='custom') $('kinri').value=LOAN_RATES[t];
+  markLoanType();
+  calc();
+}
+function onKinri(){ loanType='custom'; markLoanType(); calc(); }
+function markLoanType(){
+  const map={variable:'lt-v',fixed10:'lt-10',fixed35:'lt-35',custom:'lt-c'};
+  Object.keys(map).forEach(k=>$(map[k]).classList.toggle('on',k===loanType));
+}
+function setDesignRate(r){
+  designRate=r;
+  $('dr-25').classList.toggle('on',r===2.5);
+  $('dr-30').classList.toggle('on',r===3);
+  calc();
+}
+function setHoushiki(h){
+  houshiki=h;
+  $('segGanri').classList.toggle('on',h==='ganri');
+  $('segGankin').classList.toggle('on',h==='gankin');
+  calc();
+}
+function onStd(){
+  STD_ROWS.forEach(s=>{ if(has(s.id)) STD[s.k]=num(s.id); });
+  try{ localStorage.setItem(KEY_STD,JSON.stringify(STD)); }catch(e){}
+  calc();
+}
+function fillStd(){ STD_ROWS.forEach(s=>$(s.id).value=STD[s.k]); }
+function resetStd(){
+  if(!confirm('自動計算の基準を初期値に戻します。よろしいですか？')) return;
+  STD=Object.assign({},STD_DEF);
+  STD.tanka=KAISU_INFO[kaisu].tanka;
+  fillStd(); calc();
+}
+
+/* =========================================================
+   計算
+   ========================================================= */
+function compute(){
+  const taxRate=num('taxRate')/100;
+  const tsubo=tsuboVal();
+  const tochi=has('tochi')?num('tochi'):0;
+
+  const auto={}, val={};
+  const ctx={tsubo:tsubo, taxRate:taxRate, tochi:tochi, honTai:0, designBase:0, kariire:0};
+  const get=id=>(val[id]!==undefined)?val[id]:0;
+
+  function resolve(list){
+    list.forEach(r=>{
+      auto[r.id]=Math.max(0,r.auto(ctx));
+      val[r.id]=has(r.id)?num(r.id):auto[r.id];
+    });
+  }
+
+  resolve(ROWS.A.slice(0,1));
+  ctx.honTai=get('honTai');
+  resolve(ROWS.A.slice(1));
+  ctx.designBase=get('honTai')+get('futai')+get('kucho');
+  resolve(ROWS.B);
+  resolve(ROWS.E);
+  resolve(ROWS.J);
+
+  const A=ROWS.A.reduce((s,r)=>s+get(r.id),0);
+  const B=ROWS.B.reduce((s,r)=>s+get(r.id),0);
+  const kazei=A+B;
+  const tax=kazei*taxRate;
+  const E=tochi+ROWS.E.reduce((s,r)=>s+get(r.id),0);
+
+  const jikoRows=ROWS.J.reduce((s,r)=>s+get(r.id),0);
+  const jiko=(jikoRows>0)?jikoRows:(has('jiko')?num('jiko'):0);
+
+  let C=0,total=0,kariire=0;
+  for(let i=0;i<4;i++){
+    ROWS.C.forEach(r=>{
+      auto[r.id]=Math.max(0,r.auto(ctx));
+      val[r.id]=has(r.id)?num(r.id):auto[r.id];
+    });
+    C=ROWS.C.reduce((s,r)=>s+get(r.id),0);
+    total=kazei+tax+C+E;
+    kariire=has('kariire')?num('kariire'):Math.max(0,total-jiko);
+    ctx.kariire=kariire;
+  }
+
+  const fusoku=total-jiko-kariire;
+
+  const P=kariire*10000;
+  const n=Math.max(1,Math.round(num('nensu')))*12;
+  const r=num('kinri')/100/12;
+  let month=0,monthLast=0,sumPay=0;
+  if(P>0){
+    if(houshiki==='ganri'){
+      month=(r===0)?P/n:P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+      monthLast=month; sumPay=month*n;
+    }else{
+      const g=P/n;
+      month=g+P*r; monthLast=g+g*r; sumPay=P+r*g*n*(n+1)/2;
+    }
+  }
+  const risoku=sumPay-P;
+  const nenshu=has('nenshu')?num('nenshu'):0;
+  const futanritsu=(nenshu>0)?(month*12)/(nenshu*10000)*100:0;
+
+  lastAuto=auto;
+  return {taxRate:taxRate,tsubo:tsubo,tochi:tochi,auto:auto,val:val,A:A,B:B,C:C,E:E,
+          kazei:kazei,tax:tax,total:total,jiko:jiko,jikoRows:jikoRows,kariire:kariire,fusoku:fusoku,
+          P:P,n:n,r:r,month:month,monthLast:monthLast,sumPay:sumPay,risoku:risoku,
+          nenshu:nenshu,futanritsu:futanritsu,designBase:ctx.designBase};
+}
+
+/* ---- 数値アニメーション ---- */
+const animState={};
+function setNum(id,v,u){
+  const el=$(id); if(!el) return;
+  const from=animState[id]||0, to=v;
+  animState[id]=to;
+  const un=u?'<i>'+u+'</i>':'';
+  if(Math.abs(to-from)<1||Math.abs(to-from)>1e9){ el.innerHTML=man(to)+un; return; }
+  const t0=performance.now();
+  function stepA(t){
+    const p=Math.min(1,(t-t0)/380), e=1-Math.pow(1-p,3);
+    el.innerHTML=man(from+(to-from)*e)+un;
+    if(p<1) requestAnimationFrame(stepA);
+  }
+  requestAnimationFrame(stepA);
+}
+
+/* ---- 描画 ---- */
+function calc(){
+  const d=compute();
+
+  ALL_ROWS.forEach(r=>{
+    const tag=$('tag_'+r.id); if(!tag) return;
+    const manual=has(r.id);
+    tag.textContent=manual?'手入力':'自動';
+    tag.className='auto '+(manual?'man':'on');
+    $(r.id).placeholder=man(d.auto[r.id]||0);
+  });
+  $('kariireTag').textContent=has('kariire')?'手入力':'自動';
+  $('kariireTag').className='auto '+(has('kariire')?'man':'on');
+  $('kariire').placeholder=man(Math.max(0,d.total-d.jiko));
+  if(d.jikoRows>0) $('jiko').value=Math.round(d.jikoRows);
+  $('designHint').textContent='対象工事費 '+man(d.designBase)+'万円 × '+designRate+'% ＝ 設計料 '+
+    man(d.designBase*designRate/100)+'万円／監理費 '+man(d.designBase*STD.kanriRate/100)+'万円';
+  $('loanFeeHint').textContent=LOANFEE[loanFeeMode].label+' ＝ '+man(loanFeeAuto(d.kariire))+'万円';
+  $('taxRateLabel').textContent=num('taxRate');
+
+  setNum('stA',d.A,'万円'); setNum('stB',d.B,'万円'); setNum('stTax',d.tax,'万円');
+  setNum('stC',d.C,'万円'); setNum('stE',d.E,'万円'); setNum('stJ',d.jiko,'万円');
+  setNum('qTotal',d.total,'万円'); setNum('qMonth',d.month,'円');
+
+  setNum('kTotal',d.total,'万円');
+  $('kTotalMeta').textContent=(d.tsubo>0?KAISU_INFO[kaisu].label+'　延床'+d.tsubo.toFixed(1)+'坪　':'')+
+    ((d.tsubo>0&&d.total>0)?'坪あたり'+man(d.total/d.tsubo)+'万円':'');
+  setNum('kJiko',d.jiko,'万円'); setNum('kKariire',d.kariire,'万円');
+  setNum('kMonth',d.month,'円');
+  $('kMonthCond').textContent=man(d.kariire)+'万円／金利'+num('kinri')+'%／'+num('nensu')+'年／'+
+    ((houshiki==='ganri')?'元利均等':'元金均等（初回）');
+  $('ratioWrap').innerHTML=(d.nenshu>0)
+    ? '<span class="ratio'+((d.futanritsu>35)?' hot':'')+'">返済負担率 '+d.futanritsu.toFixed(1)+'%'+
+      ((d.futanritsu>35)?'　目安の35%超':'')+'</span>' : '';
+  $('kSum').textContent=man(d.sumPay/10000)+'万円';
+  $('kRisoku').textContent=man(d.risoku/10000)+'万円';
+  $('kEnd').textContent=(d.P>0)?(new Date().getFullYear()+Math.round(num('nensu')))+'年':'－';
+  setNum('fTotal',d.total,'万円'); setNum('fMonth',d.month,'円');
+
+  drawStack('stack',d); drawDonut(d); drawChart(d); drawList(d); drawSchedule(d); drawMsg(d);
+  syncSliders(); markChips(); saveCurrent();
+}
+
+function parts(d){
+  return [
+    {n:'請負工事',v:d.A,c:'#b8960c'},
+    {n:'設計・申請',v:d.B,c:'#c9a227'},
+    {n:'消費税',v:d.tax,c:'#6b7f8e'},
+    {n:'その他費用',v:d.C,c:'#8b1a1a'},
+    {n:'土地関連',v:d.E,c:'#3f5f7a'}
+  ];
+}
+function drawStack(id,d){
+  const t=d.total||1;
+  $(id).innerHTML=parts(d).map(p=>'<span style="width:'+(Math.max(0,p.v)/t*100)+'%;background:'+p.c+'"></span>').join('');
+}
+function drawDonut(d){
+  const t=d.total||1; let acc=0;
+  const stops=parts(d).map(p=>{
+    const a=acc, b=acc+Math.max(0,p.v)/t*100; acc=b;
+    return p.c+' '+a.toFixed(2)+'% '+b.toFixed(2)+'%';
+  }).join(',');
+  $('donut').style.background=(d.total>0)?'conic-gradient('+stops+')':'conic-gradient(#e5e0d6 0 100%)';
+  $('dTotal').textContent=man(d.total);
+  const html=parts(d).map(p=>'<div class="it"><i style="background:'+p.c+'"></i><span class="n">'+p.n+
+    '</span><span class="v">'+man(p.v)+'</span><span class="p">'+(p.v/t*100).toFixed(0)+'%</span></div>').join('');
+  $('dlg').innerHTML=html; $('pDlg').innerHTML=html; drawStack('pStack',d);
+}
+function schedule(d){
+  const out=[]; if(d.P<=0) return out;
+  let bal=d.P;
+  const years=Math.round(d.n/12), g=d.P/d.n;
+  for(let y=1;y<=years;y++){
+    let pay=0,int=0;
+    for(let m=0;m<12;m++){
+      const i=bal*d.r, pm=(houshiki==='ganri')?d.month:(g+i), pr=Math.min(pm-i,bal);
+      bal-=pr; pay+=pr+i; int+=i;
+      if(bal<0.5) bal=0;
+    }
+    out.push({y:y,pay:pay,int:int,bal:bal});
+  }
+  return out;
+}
+function drawChart(d){
+  const s=schedule(d), svg=$('chart');
+  if(!s.length){
+    svg.innerHTML='<text x="160" y="72" text-anchor="middle" fill="#6b6b6b" font-size="11">借入額が決まると表示されます</text>';
+    $('chartMid').textContent=''; $('chartEnd').textContent=''; return;
+  }
+  const W=320,H=140,p=6;
+  const pts=s.map((r,i)=>{
+    const x=p+(W-p*2)*(i+1)/s.length, y=H-p-(H-p*2)*(r.bal/d.P);
+    return x.toFixed(1)+','+y.toFixed(1);
+  });
+  const top=p+','+(H-p-(H-p*2));
+  svg.innerHTML='<defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="#8b1a1a" stop-opacity=".18"/>'+
+    '<stop offset="100%" stop-color="#8b1a1a" stop-opacity="0"/></linearGradient></defs>'+
+    '<polygon points="'+top+' '+pts.join(' ')+' '+(W-p)+','+(H-p)+' '+p+','+(H-p)+'" fill="url(#g1)"/>'+
+    '<polyline points="'+top+' '+pts.join(' ')+'" fill="none" stroke="#8b1a1a" stroke-width="1.6"/>';
+  const mid=s[Math.floor(s.length/2)-1];
+  $('chartMid').textContent=mid?(mid.y+'年目 残'+man(mid.bal/10000)+'万円'):'';
+  $('chartEnd').textContent=s.length+'年 完済';
+}
+function drawList(d){
+  let h='<tr><th>項目</th><th style="text-align:right">金額（万円）</th></tr>';
+  const grp=t=>{ h+='<tr class="grp"><td colspan="2">'+t+'</td></tr>'; };
+  const line=r=>{
+    const v=d.val[r.id]||0;
+    if(Math.round(v)===0) return;
+    h+='<tr><td>'+r.n+(has(r.id)?'':'<span style="color:#b8960c;font-size:10px;margin-left:5px">自動</span>')+
+       '</td><td class="n">'+man(v)+'</td></tr>';
+  };
+  const sub=(t,v)=>{ h+='<tr class="sub"><td>'+t+'</td><td class="n">'+man(v)+'</td></tr>'; };
+
+  grp('A　請負工事');          ROWS.A.forEach(line); sub('小計（税抜）',d.A);
+  grp('B　設計・調査・申請');  ROWS.B.forEach(line); sub('小計（税抜）',d.B);
+  sub('消費税（'+num('taxRate')+'%）',d.tax);
+  grp('C　その他の費用');      ROWS.C.forEach(line); sub('小計',d.C);
+  grp('E　土地関連');
+  if(d.tochi>0) h+='<tr><td>土地購入費用</td><td class="n">'+man(d.tochi)+'</td></tr>';
+  ROWS.E.forEach(line); sub('小計',d.E);
+  h+='<tr class="total"><td>総事業費</td><td class="n">'+man(d.total)+'</td></tr>';
+  sub('自己資金',d.jiko); sub('お借入額',d.kariire);
+  $('breakdown').innerHTML=h;
+}
+function drawSchedule(d){
+  const s=schedule(d);
+  if(!s.length){ $('schedule').innerHTML='<tr><td>借入額が決まると表示されます</td></tr>'; return; }
+  let h='<tr><th>年</th><th style="text-align:right">年間返済</th><th style="text-align:right">うち利息</th><th style="text-align:right">残高</th></tr>';
+  s.forEach(r=>{
+    h+='<tr><td>'+r.y+'年目</td><td class="n">'+man(r.pay/10000)+'万</td><td class="n">'+
+       man(r.int/10000)+'万</td><td class="n">'+man(r.bal/10000)+'万</td></tr>';
+  });
+  $('schedule').innerHTML=h;
+}
+function drawMsg(d){
+  const m=[];
+  if(has('kariire')&&Math.abs(d.fusoku)>1){
+    if(d.fusoku>0) m.push(['warn','資金が '+man(d.fusoku)+'万円 不足しています。自己資金か借入額の見直しが必要です。']);
+    else m.push(['ok','資金に '+man(-d.fusoku)+'万円 の余裕があります。']);
+  }
+  if(d.nenshu>0&&d.futanritsu>35)
+    m.push(['warn','返済負担率が '+d.futanritsu.toFixed(1)+'% です。一般に35%が審査上の目安とされます。借入額や期間の調整をご検討ください。']);
+  if(!has('jiban'))
+    m.push(['warn','地盤改良工事は0で計算しています。地盤調査の結果で数百万円単位の増額になることがあります。']);
+  if(kaisu===3&&!has('shinsei'))
+    m.push(['warn','3階建ては構造計算適合性判定などで申請費用が増えます。金額のご確認をおすすめします。']);
+  const autoCnt=ALL_ROWS.filter(r=>!has(r.id)&&(d.val[r.id]||0)>0).length;
+  if(autoCnt>0)
+    m.push(['ok',autoCnt+'項目を自動計算しています。「くわしく調整」で個別に上書きできます。']);
+  $('msg').innerHTML=m.map(x=>'<div class="msg '+x[0]+'"><span>'+x[1]+'</span></div>').join('');
+}
+function syncSliders(){
+  const r=$('r_menseki');
+  const v=has('menseki')?num('menseki'):parseFloat($('menseki').placeholder||'0');
+  r.value=Math.min(Math.max(v,parseFloat(r.min)),parseFloat(r.max));
+  const pct=(r.value-r.min)/(r.max-r.min)*100;
+  r.style.background='linear-gradient(90deg,var(--accent) 0%,var(--accent) '+pct+'%,var(--line) '+pct+'%)';
+}
+
+/* ---- 提示モード ---- */
+function openPresent(){
+  const d=compute();
+  $('pName').textContent=$('planName').value.trim()||'資金計画';
+  $('pBuild').textContent=(d.tsubo>0)?KAISU_INFO[kaisu].label+'　延床 '+d.tsubo.toFixed(1)+'坪（'+(d.tsubo*TSUBO_M2).toFixed(1)+'㎡）':'';
+  $('pTotal').innerHTML=man(d.total)+'<i>万円</i>';
+  $('pTotalC').textContent=(d.tsubo>0&&d.total>0)?'坪あたり '+man(d.total/d.tsubo)+'万円':'';
+  $('pJiko').innerHTML=man(d.jiko)+'<i>万円</i>';
+  $('pKariire').innerHTML=man(d.kariire)+'<i>万円</i>';
+  $('pMonth').innerHTML=yen(d.month)+'<i>円</i>';
+  $('pMonthC').textContent='金利'+num('kinri')+'%／'+num('nensu')+'年／'+
+    ((houshiki==='ganri')?'元利均等・ボーナス返済なし':'元金均等（初回）');
+  $('pSum').innerHTML=man(d.sumPay/10000)+'<i>万円</i>';
+  $('pRisoku').innerHTML=man(d.risoku/10000)+'<i>万円</i>';
+  drawDonut(d);
+  $('present').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closePresent(){ $('present').classList.remove('on'); document.body.style.overflow=''; }
+
+/* ---- コピー ---- */
+function copyText(){
+  const d=compute(), L=[];
+  L.push('【'+($('planName').value.trim()||'資金計画')+'　資金計画】');
+  L.push('');
+  if(d.tsubo>0) L.push('建物：'+KAISU_INFO[kaisu].label+'　延床 '+d.tsubo.toFixed(1)+'坪（'+(d.tsubo*TSUBO_M2).toFixed(1)+'㎡）');
+  L.push('');
+  L.push('■ 必要資金');
+  L.push('A 請負工事（税抜）　'+man(d.A)+'万円');
+  L.push('B 設計・調査・申請（税抜）　'+man(d.B)+'万円');
+  L.push('　消費税（'+num('taxRate')+'%）　'+man(d.tax)+'万円');
+  L.push('C その他の費用　'+man(d.C)+'万円');
+  if(d.E>0) L.push('E 土地関連　'+man(d.E)+'万円');
+  L.push('────────────');
+  L.push('総事業費　'+man(d.total)+'万円');
+  L.push('');
+  L.push('■ 資金内訳');
+  L.push('自己資金　'+man(d.jiko)+'万円');
+  L.push('お借入額　'+man(d.kariire)+'万円');
+  L.push('');
+  L.push('■ ご返済（'+((houshiki==='ganri')?'元利均等':'元金均等')+'・金利'+num('kinri')+'%・'+num('nensu')+'年）');
+  L.push('毎月のご返済　'+yen(d.month)+'円'+((houshiki==='gankin')?'（初回）':''));
+  L.push('総返済額　'+man(d.sumPay/10000)+'万円（うち利息 '+man(d.risoku/10000)+'万円）');
+  if(d.nenshu>0) L.push('返済負担率　'+d.futanritsu.toFixed(1)+'%');
+  L.push('');
+  L.push('※ 概算の試算です。金利・諸費用は金融機関やご契約内容により変動します。');
+  copyToClipboard(L.join('\n'),'コピーしました。メールやメモに貼り付けてご利用ください。');
+}
+
+/* =========================================================
+   書き出し・読み込み（JSON）
+   ========================================================= */
+function stamp(){
+  const d=new Date(), p=n=>('0'+n).slice(-2);
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());
+}
+function safeName(s){ return String(s).replace(/[\\\/:*?"<>|]/g,'_').slice(0,40); }
+
+function bundleAll(){
+  return {type:'shikin-backup', ver:4, at:new Date().toLocaleString('ja-JP'),
+          plans:loadPlans(), std:STD, current:collect()};
+}
+function bundleOne(){
+  const d=compute();
+  return {type:'shikin-plan', ver:4, at:new Date().toLocaleString('ja-JP'),
+          name:$('planName').value.trim()||'資金計画',
+          summary:{総事業費万円:Math.round(d.total), 自己資金万円:Math.round(d.jiko),
+                   借入額万円:Math.round(d.kariire), 毎月返済円:Math.round(d.month)},
+          std:STD, data:collect()};
+}
+function download(text,name){
+  try{
+    const blob=new Blob([text],{type:'application/json;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=name; a.style.display='none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); a.parentNode.removeChild(a); },1500);
+  }catch(e){
+    prompt('保存できませんでした。下記をコピーして使ってください',text);
+  }
+}
+function exportAll(){
+  download(JSON.stringify(bundleAll(),null,2),'資金計画_全データ_'+stamp()+'.json');
+}
+function exportOne(){
+  const b=bundleOne();
+  download(JSON.stringify(b,null,2),'資金計画_'+safeName(b.name)+'_'+stamp()+'.json');
+}
+function copyJSON(all){
+  const txt=JSON.stringify(all?bundleAll():bundleOne(),null,2);
+  copyToClipboard(txt,'JSONをコピーしました。メールやメモに貼り付けて保管できます。');
+}
+function copyToClipboard(txt,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ alert(msg); },
+      function(){ prompt('下記をコピーしてください',txt); });
+  }else{
+    prompt('下記をコピーしてください',txt);
+  }
+}
+function importFile(input){
+  const f=input.files&&input.files[0];
+  if(!f){ return; }
+  const rd=new FileReader();
+  rd.onload=function(e){ readBundle(String(e.target.result)); input.value=''; };
+  rd.onerror=function(){ alert('ファイルを読み込めませんでした。'); input.value=''; };
+  rd.readAsText(f);
+}
+function pasteJSON(){
+  const t=prompt('JSONを貼り付けて「OK」を押してください');
+  if(t) readBundle(t);
+}
+function readBundle(text){
+  let d;
+  try{ d=JSON.parse(text); }
+  catch(e){ alert('JSONとして読み取れませんでした。'); return; }
+
+  if(d.type==='shikin-backup'){
+    const add=d.plans||[];
+    if(!confirm('保存プラン '+add.length+'件を、いまの一覧に追加します。\n計算の基準も読み込んだ内容に置き換わります。よろしいですか？')) return;
+    const cur=loadPlans();
+    add.forEach(function(p,i){
+      if(cur.some(function(x){ return x.name===p.name; })) p.name=p.name+'（読込）';
+      p.id=Date.now()+i;
+      cur.push(p);
+    });
+    storePlans(cur);
+    if(d.std){
+      STD=Object.assign({},STD_DEF,d.std);
+      try{ localStorage.setItem(KEY_STD,JSON.stringify(STD)); }catch(e){}
+      fillStd();
+    }
+    renderSaved(); calc();
+    alert('読み込みました。保存したプランの一覧をご確認ください。');
+
+  }else if(d.type==='shikin-plan'){
+    if(!confirm('「'+(d.name||'資金計画')+'」を読み込みます。\nいまの入力内容は上書きされます。よろしいですか？')) return;
+    if(d.std){
+      STD=Object.assign({},STD_DEF,d.std);
+      try{ localStorage.setItem(KEY_STD,JSON.stringify(STD)); }catch(e){}
+      fillStd();
+    }
+    apply(d.data); calc(); showTab('result');
+    alert('読み込みました。');
+
+  }else{
+    alert('このファイルは、この資金計画シミュレーションのデータではないようです。');
+  }
+}
+
+/* ---- 表形式（Excel貼り付け用）でコピー ---- */
+function copyTable(){
+  const d=compute(), L=[];
+  const row=(a,b)=>L.push(a+'\t'+(b===''?'':man(b)));
+  L.push(($('planName').value.trim()||'資金計画')+'\t');
+  if(d.tsubo>0) L.push(KAISU_INFO[kaisu].label+'　延床'+d.tsubo.toFixed(1)+'坪\t');
+  L.push('項目\t金額（万円）');
+  const sec=(t,list,sum,label)=>{
+    L.push(t+'\t');
+    list.forEach(function(r){
+      const v=d.val[r.id]||0;
+      if(Math.round(v)!==0) row(r.n+(has(r.id)?'':'（自動）'),v);
+    });
+    row(label,sum);
+  };
+  sec('A 請負工事',ROWS.A,d.A,'小計（税抜）');
+  sec('B 設計・調査・申請',ROWS.B,d.B,'小計（税抜）');
+  row('消費税（'+num('taxRate')+'%）',d.tax);
+  sec('C その他の費用',ROWS.C,d.C,'小計');
+  L.push('E 土地関連\t');
+  if(d.tochi>0) row('土地購入費用',d.tochi);
+  ROWS.E.forEach(function(r){
+    const v=d.val[r.id]||0;
+    if(Math.round(v)!==0) row(r.n+(has(r.id)?'':'（自動）'),v);
+  });
+  row('小計',d.E);
+  row('総事業費',d.total);
+  row('自己資金',d.jiko);
+  row('お借入額',d.kariire);
+  L.push('\t');
+  L.push('金利（%）\t'+num('kinri'));
+  L.push('返済期間（年）\t'+num('nensu'));
+  L.push('返済方式\t'+(houshiki==='ganri'?'元利均等':'元金均等'));
+  L.push('毎月のご返済（円）\t'+Math.round(d.month));
+  row('総返済額',d.sumPay/10000);
+  row('うち利息',d.risoku/10000);
+  copyToClipboard(L.join('\n'),'表形式でコピーしました。ExcelやGoogleスプレッドシートに貼り付けてください。');
+}
+
+/* ---- 保存 ---- */
+function collect(){
+  const o={mode:mode,houshiki:houshiki,kaisu:kaisu,menUnit:menUnit,loanType:loanType,designRate:designRate,loanFeeMode:loanFeeMode};
+  SAVE_IDS.forEach(id=>o[id]=$(id).value);
+  return o;
+}
+function apply(o){
+  kaisu=o.kaisu||2;
+  [1,2,3].forEach(i=>$('seg-f'+i).classList.toggle('on',i===kaisu));
+  $('kaisuHint').textContent=KAISU_INFO[kaisu].hint+'　坪単価の目安 '+KAISU_INFO[kaisu].tanka+'万円/坪';
+  STD.tanka=KAISU_INFO[kaisu].tanka;
+  menUnit=o.menUnit||'tsubo';
+  setMenUnit(menUnit);
+  SAVE_IDS.forEach(id=>{ if(o[id]!==undefined) $(id).value=o[id]; });
+  designRate=o.designRate||2.5; setDesignRate(designRate);
+  loanType=o.loanType||'fixed35'; markLoanType();
+  setLoanFeeMode(o.loanFeeMode||'r22');
+  setHoushiki(o.houshiki||'ganri');
+  setMode(o.mode||'easy');
+  onArea();
+}
+function saveCurrent(){ try{ localStorage.setItem(KEY_CUR,JSON.stringify(collect())); }catch(e){} }
+function loadPlans(){ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ return []; } }
+function storePlans(a){ try{ localStorage.setItem(KEY,JSON.stringify(a)); }catch(e){ alert('保存に失敗しました。'); } }
+function savePlan(){
+  const nm=$('planName').value.trim();
+  if(!nm){ alert('お客様名／プラン名を入力してください。'); showTab('input'); $('planName').focus(); return; }
+  const d=compute(), plans=loadPlans();
+  const rec={id:Date.now(),name:nm,at:new Date().toLocaleString('ja-JP'),
+             kaisuLabel:KAISU_INFO[kaisu].label,tsubo:d.tsubo,total:d.total,month:d.month,data:collect()};
+  const i=plans.findIndex(p=>p.name===nm);
+  if(i>=0){
+    if(!confirm('「'+nm+'」はすでに保存されています。上書きしてよろしいですか？')) return;
+    rec.id=plans[i].id; plans[i]=rec;
+  }else{
+    plans.push(rec);
+  }
+  storePlans(plans); renderSaved(); alert('保存しました。');
+}
+function loadPlan(id){
+  const p=loadPlans().find(x=>x.id===id); if(!p) return;
+  if(!confirm('「'+p.name+'」を読み込みます。現在の入力内容は上書きされます。よろしいですか？')) return;
+  apply(p.data); calc(); showTab('result');
+}
+function delPlan(id){
+  const plans=loadPlans(), p=plans.find(x=>x.id===id); if(!p) return;
+  if(!confirm('「'+p.name+'」を削除します。元に戻せません。本当によろしいですか？')) return;
+  storePlans(plans.filter(x=>x.id!==id)); renderSaved();
+}
+function renderSaved(){
+  const plans=loadPlans();
+  if(!plans.length){
+    $('savedList').innerHTML='<div class="empty">保存したプランはまだありません。<br>入力したあと「このプランを保存」を押すと、ここに並びます。</div>';
+    return;
+  }
+  $('savedList').innerHTML=plans.map(p=>{
+    const s=(p.kaisuLabel?p.kaisuLabel+'　':'')+(p.tsubo?p.tsubo.toFixed(1)+'坪　':'')+
+      '総事業費 '+man(p.total)+'万円／月々 '+yen(p.month)+'円';
+    return '<div class="sv"><div style="flex:1;min-width:0"><div class="nm">'+esc(p.name)+'</div>'+
+      '<div class="mt">'+esc(s)+'</div><div class="mt">'+esc(p.at)+'</div></div>'+
+      '<button class="btn" onclick="loadPlan('+p.id+')">読込</button>'+
+      '<button class="btn del" onclick="delPlan('+p.id+')">削除</button></div>';
+  }).join('');
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function resetAll(){
+  if(!confirm('入力内容をすべてクリアします。保存済みプランは消えません。よろしいですか？')) return;
+  SAVE_IDS.forEach(id=>$(id).value='');
+  Object.keys(DEFAULTS).forEach(k=>$(k).value=DEFAULTS[k]);
+  setMenUnit('tsubo'); setKaisu(2); setLoanType('fixed35'); setDesignRate(2.5); setHoushiki('ganri'); setLoanFeeMode('r22');
+}
+
+/* ---- 起動 ---- */
+(function init(){
+  buildRows();
+  try{ const s=JSON.parse(localStorage.getItem(KEY_STD)||'null'); if(s) STD=Object.assign({},STD_DEF,s); }catch(e){}
+  fillStd();
+  Object.keys(DEFAULTS).forEach(k=>$(k).value=DEFAULTS[k]);
+  setMenUnit('tsubo');
+  let restored=false;
+  try{ const cur=JSON.parse(localStorage.getItem(KEY_CUR)||'null'); if(cur){ apply(cur); restored=true; } }catch(e){}
+  if(!restored){ setKaisu(2); setLoanType('fixed35'); setDesignRate(2.5); setLoanFeeMode('r22'); setMode('easy'); }
+  renderSaved(); calc();
+})();
+</script>
+</body>
+</html>
