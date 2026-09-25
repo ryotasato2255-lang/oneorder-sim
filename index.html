@@ -128,6 +128,9 @@ header{
   font-variant-numeric:tabular-nums;
 }
 .chips button.on{border-color:var(--accent);background:rgba(139,26,26,.06);color:var(--accent);font-weight:700}
+.chips.scrollx{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 0 4px}
+.chips.scrollx::-webkit-scrollbar{display:none}
+.chips.scrollx button{flex:none;min-width:58px}
 .chips button:active{transform:scale(.96)}
 
 .sl{margin-top:12px}
@@ -332,7 +335,7 @@ footer{
 <div class="pane on" id="pane-input">
 
   <div class="card">
-    <div class="ttl"><span class="no">1</span>この4つだけ<span class="rt">あとは自動計算</span></div>
+    <div class="ttl"><span class="no">1</span>建物<span class="rt">あとは自動計算</span></div>
 
     <div class="f">
       <div class="lb"><span class="t">お客様名／プラン名</span></div>
@@ -369,6 +372,28 @@ footer{
     </div>
 
     <div class="f">
+      <div class="lb"><span class="t">坪単価（税抜）</span><span class="auto on" id="tankaTag">目安</span></div>
+      <div class="stp">
+        <button class="mb" onclick="step('tanka',-10)">−</button>
+        <input type="number" id="tanka" inputmode="decimal" step="10" oninput="onTanka()">
+        <button class="mb" onclick="step('tanka',10)">＋</button>
+        <span class="u">万円</span>
+      </div>
+      <div class="sl">
+        <input type="range" id="r_tanka" min="100" max="300" step="10" oninput="slide('tanka',this.value)">
+        <div class="sc"><span>100万円</span><span>300万円</span></div>
+      </div>
+      <div class="chips scrollx" id="chipTanka"></div>
+      <div class="h">100万円から10万円きざみ（横にスクロールできます）。＋−でも調整できます</div>
+    </div>
+
+    <div class="sum"><span>本体工事費（延床 × 坪単価）</span><b class="num" id="qHonTai">0<i>万円</i></b></div>
+  </div>
+
+  <div class="card">
+    <div class="ttl"><span class="no">2</span>土地・自己資金</div>
+
+    <div class="f">
       <div class="lb"><span class="t">土地代</span><span class="auto" id="tochiTag">取得なしは0</span></div>
       <div class="stp">
         <button class="mb" onclick="step('tochi',-500)">−</button>
@@ -395,7 +420,7 @@ footer{
   </div>
 
   <div class="card">
-    <div class="ttl"><span class="no">2</span>住宅ローン</div>
+    <div class="ttl"><span class="no">3</span>住宅ローン</div>
 
     <div class="f">
       <div class="lb"><span class="t">金利タイプ</span></div>
@@ -702,9 +727,9 @@ let mode='easy', houshiki='ganri', kaisu=2, menUnit='tsubo', loanType='fixed35',
 let lastAuto={};
 
 const KAISU_INFO={
-  1:{tanka:145,label:'平屋',hint:'同じ延床でも基礎と屋根が大きくなるため、坪単価は上がりやすい構成です。'},
+  1:{tanka:150,label:'平屋',hint:'同じ延床でも基礎と屋根が大きくなるため、坪単価は上がりやすい構成です。'},
   2:{tanka:130,label:'2階建て',hint:'最も標準的な構成です。坪単価は基準値として扱います。'},
-  3:{tanka:142,label:'3階建て',hint:'構造計算や準耐火の仕様が加わるため、坪単価と申請費用が上がりやすい構成です。'}
+  3:{tanka:140,label:'3階建て',hint:'構造計算や準耐火の仕様が加わるため、坪単価と申請費用が上がりやすい構成です。'}
 };
 
 const STD_DEF={
@@ -731,7 +756,7 @@ function setLoanFeeMode(m){
 
 const ROWS={
   A:[
-    {id:'honTai', n:'主体工事費', h:'延床坪数 × 坪単価', auto:d=>d.tsubo*STD.tanka},
+    {id:'honTai', n:'主体工事費', h:'延床坪数 × 坪単価', auto:d=>d.tsubo*tankaVal()},
     {id:'futai',  n:'付帯工事費', h:'屋外給排水・電気ガス等。100万円単位で調整できます',
       step:100, chips:[100,200,300,400,500], auto:()=>STD.futai},
     {id:'kucho',  n:'全館空調（エアロテック）', h:'50万円単位で調整できます',
@@ -784,7 +809,7 @@ const STD_ROWS=[
 
 const ALL_ROWS=[].concat(ROWS.A,ROWS.B,ROWS.C,ROWS.E,ROWS.J);
 const ROW_IDS=ALL_ROWS.map(r=>r.id);
-const BASE_IDS=['planName','menseki','tochi','jiko','kariire','kinri','nensu','nenshu','taxRate'];
+const BASE_IDS=['planName','menseki','tanka','tochi','jiko','kariire','kinri','nensu','nenshu','taxRate'];
 const SAVE_IDS=BASE_IDS.concat(ROW_IDS);
 const DEFAULTS={kinri:LOAN_RATES.fixed35, nensu:35, taxRate:10};
 
@@ -826,6 +851,15 @@ function buildRows(){
     '<button onclick="setVal(\'jiko\','+v+')">'+man(v)+'</button>').join('');
   $('chipNensu').innerHTML=[20,25,30,35].map(v=>
     '<button onclick="setVal(\'nensu\','+v+')">'+v+'年</button>').join('');
+  var tankaList=[];
+  for(var tv=100;tv<=300;tv+=10) tankaList.push(tv);
+  $('chipTanka').innerHTML=tankaList.map(function(v){
+    return '<button data-v=' + v + '>' + v + '</button>';
+  }).join('');
+  $('chipTanka').onclick=function(e){
+    var v=e.target.getAttribute && e.target.getAttribute('data-v');
+    if(v) setVal('tanka', parseFloat(v));
+  };
 }
 
 /* ---- モード・タブ ---- */
@@ -846,6 +880,11 @@ function showTab(t){
 
 /* ---- 小物操作 ---- */
 function setVal(id,v){ $(id).value=v; if(id==='menseki') onArea(); else calc(); }
+function scrollChipIntoView(boxId){
+  const box=$(boxId); if(!box) return;
+  const on=box.querySelector('button.on'); if(!on) return;
+  box.scrollLeft=Math.max(0, on.offsetLeft - box.clientWidth/2 + on.offsetWidth/2);
+}
 function step(id,d){
   const cur=has(id)?num(id):(lastAuto[id]||0);
   let v=cur+d;
@@ -857,24 +896,36 @@ function step(id,d){
 }
 function slide(id,v){ $(id).value=v; if(id==='menseki') onArea(); else calc(); }
 function markChips(){
-  const pairs=[['chipTochi','tochi'],['chipJiko','jiko'],['chipNensu','nensu'],['chipArea','menseki']];
+  const pairs=[['chipTochi','tochi'],['chipJiko','jiko'],['chipNensu','nensu'],['chipArea','menseki'],['chipTanka','tanka']];
   ALL_ROWS.forEach(r=>{ if(r.chips) pairs.push(['chip_'+r.id, r.id]); });
   pairs.forEach(p=>{
     const box=$(p[0]); if(!box) return;
     Array.prototype.forEach.call(box.children,b=>{
-      const mt=b.getAttribute('onclick').match(/,(-?[\d.]+)\)/);
-      if(!mt) return;
-      const v=parseFloat(mt[1]);
+      let v;
+      const dv=b.getAttribute('data-v');
+      if(dv!==null){ v=parseFloat(dv); }
+      else{
+        const oc=b.getAttribute('onclick')||'';
+        const mt=oc.match(/,(-?[\d.]+)\)/);
+        if(!mt) return;
+        v=parseFloat(mt[1]);
+      }
       b.classList.toggle('on', has(p[1]) ? num(p[1])===v : false);
     });
   });
 }
 
+function tankaVal(){ return has('tanka')?num('tanka'):STD.tanka; }
+function onTanka(){ calc(); }
 function setKaisu(k){
   kaisu=k;
   [1,2,3].forEach(i=>$('seg-f'+i).classList.toggle('on',i===k));
-  $('kaisuHint').textContent=KAISU_INFO[k].hint+'　坪単価の目安 '+KAISU_INFO[k].tanka+'万円/坪';
+  $('kaisuHint').textContent=KAISU_INFO[k].hint+'　目安 '+KAISU_INFO[k].tanka+'万円/坪';
+  // 坪単価が未入力、または他の階数の目安のままなら、その階数の目安に入れ替える
+  const cur=num('tanka');
+  const isPreset=[1,2,3].some(i=>KAISU_INFO[i].tanka===cur);
   STD.tanka=KAISU_INFO[k].tanka;
+  if(!has('tanka')||isPreset) $('tanka').value=KAISU_INFO[k].tanka;
   onArea();
 }
 function setMenUnit(u){
@@ -1054,6 +1105,10 @@ function calc(){
   $('designHint').textContent='対象工事費 '+man(d.designBase)+'万円 × '+designRate+'% ＝ 設計料 '+
     man(d.designBase*designRate/100)+'万円／監理費 '+man(d.designBase*STD.kanriRate/100)+'万円';
   $('loanFeeHint').textContent=LOANFEE[loanFeeMode].label+' ＝ '+man(loanFeeAuto(d.kariire))+'万円';
+  $('tanka').placeholder=man(STD.tanka);
+  $('tankaTag').textContent=has('tanka')?'選択中':'目安';
+  $('tankaTag').className='auto '+(has('tanka')?'man':'on');
+  setNum('qHonTai',d.val['honTai']||0,'万円');
   $('taxRateLabel').textContent=num('taxRate');
 
   setNum('stA',d.A,'万円'); setNum('stB',d.B,'万円'); setNum('stTax',d.tax,'万円');
@@ -1146,7 +1201,8 @@ function drawList(d){
   const line=r=>{
     const v=d.val[r.id]||0;
     if(Math.round(v)===0) return;
-    h+='<tr><td>'+r.n+(has(r.id)?'':'<span style="color:#b8960c;font-size:10px;margin-left:5px">自動</span>')+
+    const nm=(r.id==='honTai'&&d.tsubo>0)?('主体工事費（'+d.tsubo.toFixed(1)+'坪 × '+man(tankaVal())+'万円）'):r.n;
+    h+='<tr><td>'+nm+(has(r.id)?'':'<span style="color:#b8960c;font-size:10px;margin-left:5px">自動</span>')+
        '</td><td class="n">'+man(v)+'</td></tr>';
   };
   const sub=(t,v)=>{ h+='<tr class="sub"><td>'+t+'</td><td class="n">'+man(v)+'</td></tr>'; };
@@ -1189,12 +1245,18 @@ function drawMsg(d){
     m.push(['ok',autoCnt+'項目を自動計算しています。「くわしく調整」で個別に上書きできます。']);
   $('msg').innerHTML=m.map(x=>'<div class="msg '+x[0]+'"><span>'+x[1]+'</span></div>').join('');
 }
+function paintRange(r){
+  const pct=(r.value-r.min)/(r.max-r.min)*100;
+  r.style.background='linear-gradient(90deg,var(--accent) 0%,var(--accent) '+pct+'%,var(--line) '+pct+'%)';
+}
 function syncSliders(){
   const r=$('r_menseki');
   const v=has('menseki')?num('menseki'):parseFloat($('menseki').placeholder||'0');
   r.value=Math.min(Math.max(v,parseFloat(r.min)),parseFloat(r.max));
-  const pct=(r.value-r.min)/(r.max-r.min)*100;
-  r.style.background='linear-gradient(90deg,var(--accent) 0%,var(--accent) '+pct+'%,var(--line) '+pct+'%)';
+  paintRange(r);
+  const t=$('r_tanka'), tv=tankaVal();
+  t.value=Math.min(Math.max(tv,parseFloat(t.min)),parseFloat(t.max));
+  paintRange(t);
 }
 
 /* ---- 提示モード ---- */
@@ -1456,7 +1518,7 @@ function resetAll(){
   if(!confirm('入力内容をすべてクリアします。保存済みプランは消えません。よろしいですか？')) return;
   SAVE_IDS.forEach(id=>$(id).value='');
   Object.keys(DEFAULTS).forEach(k=>$(k).value=DEFAULTS[k]);
-  setMenUnit('tsubo'); setKaisu(2); setLoanType('fixed35'); setDesignRate(2.5); setHoushiki('ganri'); setLoanFeeMode('r22');
+  setMenUnit('tsubo'); setLoanType('fixed35'); setDesignRate(2.5); setHoushiki('ganri'); setLoanFeeMode('r22'); setKaisu(2);
 }
 
 /* ---- 起動 ---- */
@@ -1470,6 +1532,7 @@ function resetAll(){
   try{ const cur=JSON.parse(localStorage.getItem(KEY_CUR)||'null'); if(cur){ apply(cur); restored=true; } }catch(e){}
   if(!restored){ setKaisu(2); setLoanType('fixed35'); setDesignRate(2.5); setLoanFeeMode('r22'); setMode('easy'); }
   renderSaved(); calc();
+  scrollChipIntoView('chipTanka');
 })();
 </script>
 </body>
